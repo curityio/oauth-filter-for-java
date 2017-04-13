@@ -21,19 +21,18 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JwtValidatorWithCert extends AbstractJwtValidator
 {
-    private static final Logger _logger = LoggerFactory.getLogger(JwtValidatorWithCert.class);
+    private static final Logger _logger = Logger.getLogger(JwtValidatorWithCert.class.getName());
 
     private final Gson _gson = new GsonBuilder()
             .disableHtmlEscaping()
@@ -100,11 +99,11 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
                 }
             }
 
-            _logger.warn("Received token but could not find matching key");
+            _logger.warning("Received token but could not find matching key");
         }
         else
         {
-            _logger.info("Requested JsonWebKey using unrecognizable alg: {}", headerMap.get("alg"));
+            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s", headerMap.get("alg")));
         }
 
         return null;

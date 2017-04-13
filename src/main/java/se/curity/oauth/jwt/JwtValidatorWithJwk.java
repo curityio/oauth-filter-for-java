@@ -22,8 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -31,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * A validator class that does not depend on any external libraries
@@ -38,7 +37,7 @@ import java.util.Optional;
 public final class JwtValidatorWithJwk extends AbstractJwtValidator
 {
 
-    private static final Logger _logger = LoggerFactory.getLogger(JwtValidatorWithJwk.class);
+    private static final Logger _logger = Logger.getLogger(JwtValidatorWithJwk.class.getName());
 
     private final Gson _gson = new GsonBuilder()
             .disableHtmlEscaping()
@@ -115,7 +114,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
         }
         else
         {
-            _logger.info("Requested JsonWebKey using unrecognizable alg: {}", headerMap.get("alg"));
+            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s", headerMap.get("alg")));
         }
 
         return Collections.emptyMap();
@@ -130,7 +129,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
         catch (JsonWebKeyNotFoundException e)
         {
             // this is not a very exceptional occurrence, so let's not log a stack-trace
-            _logger.info("Could not find requested JsonWebKey: {}", e.toString());
+            _logger.info(() -> String.format("Could not find requested JsonWebKey: %s", e));
 
             return Optional.empty();
         }

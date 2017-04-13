@@ -18,8 +18,6 @@ package se.curity.oauth;
 
 import com.google.common.collect.Sets;
 import com.google.common.net.HttpHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -34,10 +32,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public abstract class OAuthFilter implements Filter
 {
-    private static final Logger _logger = LoggerFactory.getLogger(OAuthFilter.class);
+    private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
 
     public static final String PRINCIPAL = "principal";
     private static final String[] NO_PRESENTED_SCOPES = new String[0];
@@ -177,7 +176,7 @@ public abstract class OAuthFilter implements Filter
 
             if(tokenSplit.length != 2)
             {
-                _logger.debug("Incoming token in Authorization header is not a Bearer token");
+                _logger.fine("Incoming token in Authorization header is not a Bearer token");
             }
             else
             {

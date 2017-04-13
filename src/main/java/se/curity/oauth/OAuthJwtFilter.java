@@ -19,8 +19,6 @@ package se.curity.oauth;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.io.Closeables;
 import org.apache.http.client.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import se.curity.oauth.jwt.JwtValidator;
 import se.curity.oauth.jwt.JwtValidatorWithJwk;
 
@@ -32,12 +30,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
-
-import static se.curity.oauth.FilterHelper.getInitParamValue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class OAuthJwtFilter extends OAuthFilter
 {
-    private static final Logger _logger = LoggerFactory.getLogger(OAuthJwtFilter.class);
+    private static final Logger _logger = Logger.getLogger(OAuthJwtFilter.class.getName());
 
     private String _oauthHost = null;
     private String[] _scopes = null;
@@ -86,15 +84,15 @@ public class OAuthJwtFilter extends OAuthFilter
                 }
                 catch (URISyntaxException e)
                 {
-                    _logger.error("Invalid parameters", e);
+                    _logger.log(Level.SEVERE, "Invalid parameters", e);
 
                     throw new UnavailableException("Service is unavailable");
                 }
-                _logger.info("{} successfully initialized", OAuthFilter.class.getSimpleName());
+                _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
             else
             {
-                _logger.warn("Attempted to set webkey URI more than once! Ignoring further attempts.");
+                _logger.warning("Attempted to set webkey URI more than once! Ignoring further attempts.");
             }
         }
     }
@@ -137,7 +135,7 @@ public class OAuthJwtFilter extends OAuthFilter
         }
         catch (Exception e)
         {
-            _logger.debug("Failed to validate incoming token due to: {}", e.getMessage());
+            _logger.fine(() -> String.format("Failed to validate incoming token due to: %s", e.getMessage()));
         }
 
         return Optional.ofNullable(result);
@@ -154,7 +152,7 @@ public class OAuthJwtFilter extends OAuthFilter
         }
         catch (IOException e)
         {
-            _logger.warn("Problem closing jwk client", e);
+            _logger.log(Level.WARNING, "Problem closing jwk client", e);
         }
     }
 }

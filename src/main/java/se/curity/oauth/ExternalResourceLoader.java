@@ -17,16 +17,16 @@
 package se.curity.oauth;
 
 import org.apache.http.client.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Properties;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 final class ExternalResourceLoader
 {
-    private static final Logger _logger = LoggerFactory.getLogger(ExternalResourceLoader.class);
+    private static final Logger _logger = Logger.getLogger(ExternalResourceLoader.class.getName());
 
     private static final String PROPS_FILE_NAME = "OAuthFilter.properties";
     private static final String PROPERTIES_LOCATION = "/META-INF/services/" + PROPS_FILE_NAME;
@@ -77,7 +77,7 @@ final class ExternalResourceLoader
             }
             catch (IOException e)
             {
-                _logger.warn("Problem loading properties at " + PROPERTIES_LOCATION, e);
+                _logger.log(Level.WARNING, e, () -> "Problem loading properties at " + PROPERTIES_LOCATION);
             }
         }
     }
@@ -100,7 +100,7 @@ final class ExternalResourceLoader
             Class<? extends Supplier> supplierType = Class.forName(httpClientSupplierClassName)
                     .asSubclass(Supplier.class);
 
-            _logger.info("Using HttpClientSupplier of type {}", supplierType.getName());
+            _logger.info(() -> String.format("Using HttpClientSupplier of type %s", supplierType.getName()));
 
             Supplier<?> supplier = supplierType.newInstance();
             Object httpClient = supplier.get();
@@ -109,8 +109,8 @@ final class ExternalResourceLoader
         }
         catch (Exception e)
         {
-            _logger.warn("Unable to load httpClientSupplier from " + PROPERTIES_LOCATION +
-                    "\nWill fallback to the default HTTP Client", e);
+            _logger.log(Level.WARNING, e, () -> "Unable to load httpClientSupplier from " + PROPERTIES_LOCATION +
+                    "\nWill fallback to the default HTTP Client");
 
             return new DefaultJwkHttpClientSupplier().get();
         }

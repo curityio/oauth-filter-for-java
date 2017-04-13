@@ -28,8 +28,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -41,10 +39,12 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 final class JwkManager implements Closeable
 {
-    private static final Logger _logger = LoggerFactory.getLogger(JwkManager.class);
+    private static final Logger _logger = Logger.getLogger(JwkManager.class.getName());
 
     private final URI _jwksUri;
 
@@ -100,13 +100,13 @@ final class JwkManager implements Closeable
                 newKeys.put(key.getKid(), key);
             }
 
-            _logger.info("Fetched JsonWebKeys: {}", newKeys);
+            _logger.info(() -> String.format("Fetched JsonWebKeys: %s", newKeys));
 
             return ImmutableMap.copyOf(newKeys);
         }
         catch (IOException e)
         {
-            _logger.error("Could not contact Jwks Server at " + _jwksUri, e);
+            _logger.log(Level.SEVERE, "Could not contact Jwks Server at " + _jwksUri, e);
 
             return ImmutableMap.of();
         }
@@ -122,7 +122,7 @@ final class JwkManager implements Closeable
 
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
         {
-            _logger.error("Got error from Jwks server: " + response.getStatusLine().getStatusCode());
+            _logger.severe(() -> "Got error from Jwks server: " + response.getStatusLine().getStatusCode());
 
             throw new IOException("Got error from Jwks server: " + response.getStatusLine().getStatusCode());
         }
@@ -139,8 +139,7 @@ final class JwkManager implements Closeable
     {
         _logger.info("Called ensureCacheIsFresh");
 
-        Instant lastLoading = _jsonWebKeyByKID.getLastReloadInstant()
-                .orElseGet(() -> Instant.MIN);
+        Instant lastLoading = _jsonWebKeyByKID.getLastReloadInstant().orElse(Instant.MIN);
         boolean cacheIsNotFresh = lastLoading.isBefore(Instant.now()
                 .minus(_jsonWebKeyByKID.getMinTimeBetweenReloads()));
 

@@ -30,8 +30,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -40,10 +38,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class OpaqueTokenValidator implements Closeable
 {
-    private static final Logger _logger = LoggerFactory.getLogger(OpaqueTokenValidator.class);
+    private static final Logger _logger = Logger.getLogger(OpaqueTokenValidator.class.getName());
 
     private final Gson _gson = new GsonBuilder()
             .disableHtmlEscaping()
@@ -113,7 +112,7 @@ public class OpaqueTokenValidator implements Closeable
 
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
         {
-            _logger.error("Got error from introspection server: " + response.getStatusLine().getStatusCode());
+            _logger.severe(() -> "Got error from introspection server: " + response.getStatusLine().getStatusCode());
 
             throw new IOException("Got error from introspection server: " + response.getStatusLine().getStatusCode());
         }

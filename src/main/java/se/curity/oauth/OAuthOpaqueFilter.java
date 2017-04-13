@@ -19,8 +19,6 @@ package se.curity.oauth;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.io.Closeables;
 import org.apache.http.client.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import se.curity.oauth.opaque.OpaqueToken;
 import se.curity.oauth.opaque.OpaqueTokenValidator;
 
@@ -31,13 +29,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static se.curity.oauth.FilterHelper.getInitParamValue;
 import static se.curity.oauth.FilterHelper.initParamsMapFrom;
 
 public class OAuthOpaqueFilter extends OAuthFilter
 {
-    private static final Logger _logger = LoggerFactory.getLogger(OAuthOpaqueFilter.class);
+    private static final Logger _logger = Logger.getLogger(OAuthOpaqueFilter.class.getName());
 
     private final HttpClient _httpClient = ExternalResourceLoader.getInstance().loadJwkHttpClient();
 
@@ -82,15 +82,15 @@ public class OAuthOpaqueFilter extends OAuthFilter
                 }
                 catch (URISyntaxException e)
                 {
-                    _logger.error("Invalid parameters", e);
+                    _logger.log(Level.SEVERE, "Invalid parameters", e);
 
                     throw new UnavailableException("Service is unavailable");
                 }
-                _logger.info("{} successfully initialized", OAuthFilter.class.getSimpleName());
+                _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
             else
             {
-                _logger.warn("Attempted to set introspect URI more than once! Ignoring further attempts.");
+                _logger.warning("Attempted to set introspect URI more than once! Ignoring further attempts.");
             }
         }
     }
@@ -141,7 +141,7 @@ public class OAuthOpaqueFilter extends OAuthFilter
         }
         catch (IOException e)
         {
-            _logger.warn("Problem closing jwk client", e);
+            _logger.log(Level.WARNING, "Problem closing jwk client", e);
         }
     }
 }

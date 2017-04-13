@@ -19,24 +19,27 @@ package se.curity.oauth.jwt;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jose4j.jwa.AlgorithmConstraints;
+import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.ReservedClaimNames;
 import org.jose4j.lang.JoseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.jose4j.jwa.AlgorithmConstraints;
-import org.jose4j.jws.AlgorithmIdentifiers;
 
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class JwtTokenIssuer
 {
-    private static Logger logger = LoggerFactory.getLogger(JwtTokenIssuer.class);
+    private static final Log logger = LogFactory.getLog(JwtTokenIssuer.class);
 
     private final int skewTolerance;
     private final String issuer;
@@ -204,5 +207,4 @@ public class JwtTokenIssuer
         }
         return data;
     }
-
 }
