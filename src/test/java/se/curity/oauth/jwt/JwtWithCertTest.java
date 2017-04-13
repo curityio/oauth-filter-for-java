@@ -35,7 +35,6 @@ import java.util.Optional;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 public class JwtWithCertTest
 {
@@ -54,7 +53,6 @@ public class JwtWithCertTest
     private String _testToken;
     private KeyStore _keyStore;
 
-
     @Before
     public void before() throws Exception
     {
@@ -70,7 +68,6 @@ public class JwtWithCertTest
 
         _testToken = issuer.issueToken(SUBJECT,AUDIENCE,EXPIRATION,attributes);
     }
-
 
     @Test
     public void testFindAndValidateWithOneCert() throws Exception
@@ -118,8 +115,6 @@ public class JwtWithCertTest
         return keys;
     }
 
-
-
     private void loadKeyStore()
             throws Exception
     {
@@ -148,5 +143,4 @@ public class JwtWithCertTest
         return (Certificate)this._keyStore.getCertificate(KEY_ALIAS);
 
     }
-
 }
