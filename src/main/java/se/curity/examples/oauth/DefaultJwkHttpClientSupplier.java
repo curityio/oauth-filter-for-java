@@ -25,7 +25,6 @@ import java.util.function.Supplier;
 
 final class DefaultJwkHttpClientSupplier implements Supplier<HttpClient>
 {
-
     private final CloseableHttpClient _httpClient = HttpClients
             .custom()
             .disableAuthCaching()
