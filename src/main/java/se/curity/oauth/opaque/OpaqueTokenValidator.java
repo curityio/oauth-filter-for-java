@@ -33,13 +33,13 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class OpaqueTokenValidator implements Closeable
 {
@@ -66,10 +66,9 @@ public class OpaqueTokenValidator implements Closeable
         _tokenCache = new ExpirationBasedCache<>();
     }
 
-    @Nullable
-    public OpaqueToken validate(String token) throws IOException
+    public Optional<OpaqueToken> validate(String token) throws IOException
     {
-        @Nullable OpaqueToken cachedValue = _tokenCache.get(token);
+        Optional<OpaqueToken> cachedValue = _tokenCache.get(token);
 
         if (cachedValue != null)
         {
@@ -89,11 +88,11 @@ public class OpaqueTokenValidator implements Closeable
                 //      in clear text
                 _tokenCache.put(token, newToken);
 
-                return newToken;
+                return Optional.of(newToken);
             }
         }
 
-        return null;
+        return Optional.empty();
     }
 
     protected String introspect(String token) throws IOException

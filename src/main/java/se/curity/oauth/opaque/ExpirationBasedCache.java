@@ -16,10 +16,10 @@
 
 package se.curity.oauth.opaque;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,7 +48,7 @@ public class ExpirationBasedCache<K, V extends Expirable>
             }} , 60, 60);
     }
 
-    public @Nullable V get(K key)
+    public Optional<V> get(K key)
     {
         //optimistically get a value
         V value = _cache.get(key);
@@ -56,10 +56,10 @@ public class ExpirationBasedCache<K, V extends Expirable>
         //make sure it's not expired yet
         if (value != null && value.getExpiresAt().isAfter(Instant.now(_clock)))
         {
-            return null;
+            value = null;
         }
 
-        return value;
+        return Optional.ofNullable(value);
     }
 
     public void put(K key, V value)

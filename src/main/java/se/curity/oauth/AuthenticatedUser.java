@@ -18,15 +18,15 @@ package se.curity.oauth;
 
 import com.google.common.base.Preconditions;
 
-import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Optional;
 
 public class AuthenticatedUser
 {
     private final String _sub;
     private final String _scope;
 
-    AuthenticatedUser(String subject, @Nullable String scope)
+    AuthenticatedUser(String subject, String scope)
     {
         _sub = subject;
         _scope = scope;
@@ -37,16 +37,16 @@ public class AuthenticatedUser
         return _sub;
     }
 
-    public @Nullable String getScope()
+    public Optional<String> getScope()
     {
-        return _scope;
+        return Optional.ofNullable(_scope);
     }
 
     static AuthenticatedUser fromMap(Map<String, Object> tokenData)
     {
         Preconditions.checkNotNull(tokenData.get("sub"));
         String sub = (String)tokenData.get("sub");
-        @Nullable String scope = (String) tokenData.get("scope");
+        String scope = (String) tokenData.get("scope");
 
         return new AuthenticatedUser(sub, scope);
     }

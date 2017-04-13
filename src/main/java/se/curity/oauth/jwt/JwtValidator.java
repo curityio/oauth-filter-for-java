@@ -16,7 +16,6 @@
 
 package se.curity.oauth.jwt;
 
-import javax.annotation.Nullable;
 import java.io.Closeable;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +28,6 @@ public interface JwtValidator extends Closeable
      * @return the content of the token body if token signature is valid, otherwise null
      * @throws JwtValidationException
      */
-    @Nullable
     Map<String, Object> validate(String jwt) throws JwtValidationException;
 
     /**

@@ -21,8 +21,6 @@ import com.google.common.net.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -34,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public abstract class OAuthFilter implements Filter
@@ -61,26 +60,28 @@ public abstract class OAuthFilter implements Filter
             throws IOException, ServletException
     {
         HttpServletResponse response = (HttpServletResponse)servletResponse;
-        @Nullable String token = extractAccessTokenFromHeader(servletRequest);
+        Optional<String> token = extractAccessTokenFromHeader(servletRequest);
         String oauthHost = getOAuthHost();
 
-        if (token == null)
+        if (!token.isPresent())
         {
             setReAuthenticate401(response, oauthHost);
 
             return;
         }
 
-        @Nullable AuthenticatedUser authenticatedUser = authenticate(token);
+        Optional<AuthenticatedUser> maybeAuthenticatedUser = authenticate(token.get());
 
-        if (authenticatedUser == null)
+        if (!maybeAuthenticatedUser.isPresent())
         {
             setReAuthenticate401(response, oauthHost);
 
             return;
         }
 
-        if (!authorize(authenticatedUser.getScope()))
+        AuthenticatedUser authenticatedUser = maybeAuthenticatedUser.get();
+
+        if (!authorize(authenticatedUser.getScope().orElse(null)))
         {
             //403 Forbidden Scope header
             setForbidden403(response, oauthHost);
@@ -88,7 +89,7 @@ public abstract class OAuthFilter implements Filter
             return;
         }
 
-        servletRequest.setAttribute(PRINCIPAL, authenticatedUser);
+        servletRequest.setAttribute(PRINCIPAL, maybeAuthenticatedUser);
 
         if (filterChain != null)
         {
@@ -124,7 +125,7 @@ public abstract class OAuthFilter implements Filter
      * request to be authorized.
      * @return An array of required scopes, or an empty array if all scopes are allowed
      */
-    protected abstract @Nonnull String[] getScopes() throws ServletException;
+    protected abstract String[] getScopes() throws ServletException;
 
     /**
      * This is the authenticate method of the filter, it will take the token as string input and
@@ -134,7 +135,7 @@ public abstract class OAuthFilter implements Filter
      * @throws IOException
      * @throws ServletException
      */
-    protected abstract @Nullable AuthenticatedUser authenticate(String token) throws IOException, ServletException;
+    protected abstract Optional<AuthenticatedUser> authenticate(String token) throws IOException, ServletException;
 
     /**
      * Authorizes the current request based on the scopes in the token against the scopes defined
@@ -143,7 +144,7 @@ public abstract class OAuthFilter implements Filter
      * @param scopesInToken the string of scopes presented in the token
      * @return true if access is allowed
      */
-    protected boolean authorize(@Nullable String scopesInToken) throws ServletException
+    protected boolean authorize(String scopesInToken) throws ServletException
     {
         List<String> requiredScopes = Arrays.asList(getScopes());
 
@@ -164,10 +165,11 @@ public abstract class OAuthFilter implements Filter
      * @param request The incoming request
      * @return the token or null if not present
      */
-    private @Nullable String extractAccessTokenFromHeader(ServletRequest request)
+    private Optional<String> extractAccessTokenFromHeader(ServletRequest request)
     {
         HttpServletRequest httpRequest = (HttpServletRequest)request;
-        @Nullable String authorizationHeader = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
+        String authorizationHeader = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
+        String result = null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer"))
         {
@@ -176,12 +178,13 @@ public abstract class OAuthFilter implements Filter
             if(tokenSplit.length != 2)
             {
                 _logger.debug("Incoming token in Authorization header is not a Bearer token");
-                return null;
             }
-
-            return tokenSplit[1];
+            else
+            {
+                result = tokenSplit[1];
+            }
         }
 
-        return null;
+        return Optional.ofNullable(result);
     }
 }

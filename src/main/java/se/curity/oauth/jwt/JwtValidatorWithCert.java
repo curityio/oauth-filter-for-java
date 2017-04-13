@@ -24,7 +24,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -56,8 +55,7 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
      * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
      */
     @Override
-    public @Nullable
-    Map<String, Object> validate(String jwt)
+    public Map<String, Object> validate(String jwt)
     {
         String[] jwtParts = jwt.split("\\.");
 

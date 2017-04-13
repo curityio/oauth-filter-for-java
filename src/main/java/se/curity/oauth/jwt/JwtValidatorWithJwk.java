@@ -25,15 +25,12 @@ import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 
 /**
  * A validator class that does not depend on any external libraries
@@ -62,8 +59,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
      * @throws IllegalArgumentException if alg or kid are not present in the JWT header.
      * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
      */
-    public @Nullable
-    Map<String,Object> validate(String jwt) throws JwtValidationException
+    public Map<String,Object> validate(String jwt) throws JwtValidationException
     {
         String[] jwtParts = jwt.split("\\.");
 
@@ -78,24 +74,24 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
 
         Base64 base64 = new Base64(true);
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> headerMap = _gson.fromJson(
-                new String(base64.decode(header), Charsets.UTF_8), Map.class);
+        Map<?, ?> headerMap = _gson.fromJson(new String(base64.decode(header), Charsets.UTF_8), Map.class);
 
-        String alg = headerMap.get("alg");
-        String kid = headerMap.get("kid");
+        Object alg = headerMap.get("alg");
+        Object kid = headerMap.get("kid");
 
-        Preconditions.checkArgument(!isNullOrEmpty(alg), "Alg is not present in JWT");
-        Preconditions.checkArgument(!isNullOrEmpty(kid), "Key ID is not present in JWT");
+        Preconditions.checkNotNull(alg, "Alg is not present in JWT");
+        Preconditions.checkNotNull(kid, "Key ID is not present in JWT");
 
-        if (canRecognizeAlg(alg))
+        if (canRecognizeAlg(alg.toString()))
         {
             try
             {
-                Optional<JsonWebKey> maybeWebKey = getJsonWebKeyFor(kid);
+                Optional<JsonWebKey> maybeWebKey = getJsonWebKeyFor(kid.toString());
+
                 if (maybeWebKey.isPresent())
                 {
                     byte[] signatureData = base64.decode(jwtParts[2]);
+
                     if(validateSignature(headerAndPayload,
                             signatureData,
                             getKeyFromModAndExp(maybeWebKey.get().getModulus(), maybeWebKey.get().getExponent())))
@@ -122,7 +118,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
             _logger.info("Requested JsonWebKey using unrecognizable alg: {}", headerMap.get("alg"));
         }
 
-        return null;
+        return Collections.emptyMap();
     }
 
     private Optional<JsonWebKey> getJsonWebKeyFor(String kid)

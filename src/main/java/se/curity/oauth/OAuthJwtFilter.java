@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 import se.curity.oauth.jwt.JwtValidator;
 import se.curity.oauth.jwt.JwtValidatorWithJwk;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
@@ -112,7 +110,6 @@ public class OAuthJwtFilter extends OAuthFilter
         return _oauthHost;
     }
 
-    @Nonnull
     @Override
     protected String[] getScopes() throws UnavailableException
     {
@@ -124,17 +121,18 @@ public class OAuthJwtFilter extends OAuthFilter
         return _scopes;
     }
 
-    @Nullable
     @Override
-    protected AuthenticatedUser authenticate(String token) throws IOException, ServletException
+    protected Optional<AuthenticatedUser> authenticate(String token) throws IOException, ServletException
     {
+        AuthenticatedUser result = null;
+
         try
         {
-            @Nullable Map<String, Object> validationResult = _jwtValidator.validate(token);
+            Map<String, Object> validationResult = _jwtValidator.validate(token);
 
-            if (validationResult != null)
+            if (!validationResult.isEmpty())
             {
-                return AuthenticatedUser.fromMap(validationResult);
+                result = AuthenticatedUser.fromMap(validationResult);
             }
         }
         catch (Exception e)
@@ -142,7 +140,7 @@ public class OAuthJwtFilter extends OAuthFilter
             _logger.debug("Failed to validate incoming token due to: {}", e.getMessage());
         }
 
-        return null;
+        return Optional.ofNullable(result);
     }
 
     @Override

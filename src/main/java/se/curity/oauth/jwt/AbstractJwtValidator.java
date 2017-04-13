@@ -22,7 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.codec.binary.Base64;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.PublicKey;
@@ -40,7 +39,6 @@ public class AbstractJwtValidator implements JwtValidator
             .disableHtmlEscaping()
             .create();
 
-    @Nullable
     @Override
     public Map<String, Object> validate(String jwt) throws JwtValidationException
     {
@@ -50,7 +48,7 @@ public class AbstractJwtValidator implements JwtValidator
     @Override
     public Optional<Map<String, Object>> validateAll(String jwt, String audience, String issuer) throws JwtValidationException
     {
-        if (this.validate(jwt) == null)
+        if (validate(jwt).isEmpty())
         {
             return Optional.empty();
         }

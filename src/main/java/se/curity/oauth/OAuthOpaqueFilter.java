@@ -24,14 +24,13 @@ import org.slf4j.LoggerFactory;
 import se.curity.oauth.opaque.OpaqueToken;
 import se.curity.oauth.opaque.OpaqueTokenValidator;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 import static se.curity.oauth.FilterHelper.getInitParamValue;
 import static se.curity.oauth.FilterHelper.initParamsMapFrom;
@@ -107,7 +106,7 @@ public class OAuthOpaqueFilter extends OAuthFilter
         return _oauthHost;
     }
 
-    protected @Nonnull String[] getScopes() throws UnavailableException
+    protected String[] getScopes() throws UnavailableException
     {
         if (_scopes == null)
         {
@@ -117,18 +116,20 @@ public class OAuthOpaqueFilter extends OAuthFilter
         return _scopes;
     }
 
-    @Nullable
     @Override
-    protected AuthenticatedUser authenticate(String token) throws IOException, ServletException
+    protected Optional<AuthenticatedUser> authenticate(String token) throws IOException, ServletException
     {
-        @Nullable OpaqueToken opaqueToken = _opaqueTokenValidator.validate(token);
+        Optional<OpaqueToken> maybeOpaqueToken = _opaqueTokenValidator.validate(token);
+        AuthenticatedUser result = null;
 
-        if (opaqueToken == null)
+        if (maybeOpaqueToken.isPresent())
         {
-            return null;
+            OpaqueToken opaqueToken = maybeOpaqueToken.get();
+            
+            result = new AuthenticatedUser(opaqueToken.getSubject(), opaqueToken.getScope());
         }
 
-        return new AuthenticatedUser(opaqueToken.getSubject(), opaqueToken.getScope());
+        return Optional.ofNullable(result);
     }
 
     @Override

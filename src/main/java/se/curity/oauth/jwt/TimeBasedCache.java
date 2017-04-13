@@ -18,7 +18,6 @@ package se.curity.oauth.jwt;
 
 import com.google.common.collect.ImmutableMap;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -44,7 +43,6 @@ public class TimeBasedCache<K, V>
     private volatile ImmutableMap<K, V> _cache;
     private volatile Instant _nextLoadingEarliestTime = Instant.MIN;
 
-    @Nullable
     private volatile Instant _lastLoading;
 
     private final Duration _minTimeBetweenReloads;

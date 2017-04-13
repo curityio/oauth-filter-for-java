@@ -77,8 +77,8 @@ public class JwtWithCertTest
     {
 
         JwtValidator validator = new JwtValidatorWithCert(prepareKeyMap());
-        assertNotNull(validator.validate(_testToken));
 
+        assertNotNull(validator.validate(_testToken));
     }
 
     @Test
