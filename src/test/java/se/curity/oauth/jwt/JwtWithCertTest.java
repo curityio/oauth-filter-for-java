@@ -17,16 +17,20 @@
 package se.curity.oauth.jwt;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.json.JsonObject;
+import javax.json.JsonString;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +42,8 @@ import static junit.framework.TestCase.assertTrue;
 
 public class JwtWithCertTest
 {
+    private static final Logger _logger = LogManager.getLogger(JwtWithCertTest.class);
+
     private final String SUBJECT = "testsubject";
     private final String AUDIENCE = "foo:audience";
     private final String ISSUER = "test:issuer";
@@ -48,8 +54,7 @@ public class JwtWithCertTest
     private final String PATH_TO_KEY = "/Se.Curity.Test.p12";
     private final String KEY_ALIAS = "se.curity.test";
     private final String KEY_PWD = "Password1";
-
-
+    
     private String _testToken;
     private KeyStore _keyStore;
 
@@ -72,10 +77,14 @@ public class JwtWithCertTest
     @Test
     public void testFindAndValidateWithOneCert() throws Exception
     {
-
         JwtValidator validator = new JwtValidatorWithCert(prepareKeyMap());
 
-        assertNotNull(validator.validate(_testToken));
+        _logger.info("test token = {}", _testToken);
+
+        JsonObject validatedToken = validator.validate(_testToken);
+
+        assertNotNull(validatedToken);
+        assertTrue(!validatedToken.isEmpty());
     }
 
     @Test
@@ -83,14 +92,16 @@ public class JwtWithCertTest
     {
         JwtValidator validator = new JwtValidatorWithCert(prepareKeyMap());
 
-        Optional<Map<String, Object>> result = validator.validateAll(_testToken, AUDIENCE, ISSUER);
+        Optional<JsonObject> result = validator.validateAll(_testToken, AUDIENCE, ISSUER);
+
+        _logger.info("test token = {}", _testToken);
 
         assertTrue(result.isPresent());
         assertTrue(result.get().containsKey("sub"));
         assertTrue(result.get().containsKey(EXTRA_CLAIM));
 
-        assertEquals(result.get().get("sub"), SUBJECT);
-        assertEquals(result.get().get(EXTRA_CLAIM), EXTRA_CLAIM_VALUE);
+        assertEquals(SUBJECT, ((JsonString) result.get().get("sub")).getString());
+        assertEquals(EXTRA_CLAIM_VALUE, ((JsonString) result.get().get(EXTRA_CLAIM)).getString());
     }
 
     /**

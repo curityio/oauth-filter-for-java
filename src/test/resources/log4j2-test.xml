@@ -1,0 +1,27 @@
+<!--
+  ~ Copyright (C) 2015-2016 Curity AB. All rights reserved.
+  ~
+  ~ The contents of this file are the property of Curity AB.
+  ~ You may not copy or use this file, in either source code
+  ~ or executable form, except in compliance with terms
+  ~ set by Curity AB.
+  ~
+  ~ For further information, please contact Curity AB.
+  -->
+
+<!-- This file configures log4j as it's used during development. This file does not ship with the product -->
+<Configuration>
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout noConsoleNoAnsi="true" pattern="%date{yyyy-MM-dd'T'HH:mm:ss:SSSZ} %highlight{%-5level}{FATAL=blink bright red, ERROR=bright red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=white} %highlight{{%thread}}{FATAL=white, ERROR=white, WARN=white, INFO=white, DEBUG=white, TRACE=white} %highlight{%logger:%line %msg%n}{FATAL=blink bright red, ERROR=bright red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=white}"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="se.curity" level="TRACE"/>
+
+        <Root level="WARN">
+            <AppenderRef ref="stdout"/>
+            <includeLocation>true</includeLocation>
+        </Root>
+    </Loggers>
+</Configuration>

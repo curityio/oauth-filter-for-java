@@ -16,18 +16,12 @@
 
 package se.curity.oauth.jwt;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.HttpClient;
 
+import javax.json.JsonObject;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Base64;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -36,12 +30,7 @@ import java.util.logging.Logger;
  */
 public final class JwtValidatorWithJwk extends AbstractJwtValidator
 {
-
     private static final Logger _logger = Logger.getLogger(JwtValidatorWithJwk.class.getName());
-
-    private final Gson _gson = new GsonBuilder()
-            .disableHtmlEscaping()
-            .create();
 
     private final JwkManager _jwkManager;
 
@@ -58,7 +47,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
      * @throws IllegalArgumentException if alg or kid are not present in the JWT header.
      * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
      */
-    public Map<String,Object> validate(String jwt) throws JwtValidationException
+    public JsonObject validate(String jwt) throws JwtValidationException
     {
         String[] jwtParts = jwt.split("\\.");
 
@@ -69,41 +58,30 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
 
         String header = jwtParts[0];
         String body = jwtParts[1];
-        byte[] headerAndPayload = convertToBytes(header + "." + jwtParts[1]);
+        JwtHeader jwtHeader = decodeJwtHeader(header);
 
-        Base64 base64 = new Base64(true);
+        String alg = jwtHeader.getAlgorithm();
+        String kid = jwtHeader.getKeyId();
 
-        Map<?, ?> headerMap = _gson.fromJson(new String(base64.decode(header), Charsets.UTF_8), Map.class);
+        assert alg != null && alg.length() > 0 : "Alg is not present in JWT";
+        assert kid != null && kid.length() > 0 : "Key ID is not present in JWT";
 
-        Object alg = headerMap.get("alg");
-        Object kid = headerMap.get("kid");
-
-        Preconditions.checkNotNull(alg, "Alg is not present in JWT");
-        Preconditions.checkNotNull(kid, "Key ID is not present in JWT");
-
-        if (canRecognizeAlg(alg.toString()))
+        if (canRecognizeAlg(alg))
         {
             try
             {
-                Optional<JsonWebKey> maybeWebKey = getJsonWebKeyFor(kid.toString());
+                Optional<JsonWebKey> maybeWebKey = getJsonWebKeyFor(kid);
 
                 if (maybeWebKey.isPresent())
                 {
-                    byte[] signatureData = base64.decode(jwtParts[2]);
+                    byte[] signatureData = Base64.getUrlDecoder().decode(jwtParts[2]);
+                    byte[] headerAndPayload = convertToBytes(header + "." + jwtParts[1]);
 
                     if(validateSignature(headerAndPayload,
                             signatureData,
                             getKeyFromModAndExp(maybeWebKey.get().getModulus(), maybeWebKey.get().getExponent())))
                     {
-                        Map<?, ?> map = _gson.fromJson(new String(base64.decode(body), Charsets.UTF_8), Map.class);
-                        Map<String, Object> result = new LinkedHashMap<>(map.size());
-
-                        for (Map.Entry entry : map.entrySet())
-                        {
-                            result.put(entry.getKey().toString(), entry.getValue());
-                        }
-
-                        return result;
+                        return decodeJwtBody(body);
                     }
                 }
             }
@@ -114,10 +92,11 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
         }
         else
         {
-            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s", headerMap.get("alg")));
+            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s",
+                    jwtHeader.getAlgorithm()));
         }
 
-        return Collections.emptyMap();
+        return null;
     }
 
     private Optional<JsonWebKey> getJsonWebKeyFor(String kid)

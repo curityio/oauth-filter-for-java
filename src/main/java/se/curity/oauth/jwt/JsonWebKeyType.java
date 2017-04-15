@@ -16,9 +16,45 @@
 
 package se.curity.oauth.jwt;
 
+import javax.json.JsonValue;
+import java.util.logging.Logger;
+
 enum JsonWebKeyType
 {
     RSA,
-    EC
+    EC,
+    OCT,
+    UNSPECIFIED;
+
+    private static final Logger _logger = Logger.getLogger(JsonWebKeyType.class.getName());
+
+    static JsonWebKeyType from(JsonValue value)
+    {
+        if (value == null || value.toString().length() == 0)
+        {
+            return UNSPECIFIED;
+        }
+
+        if (value.getValueType() != JsonValue.ValueType.STRING)
+        {
+            _logger.warning(() -> String.format("Value '%s' is not a string, as required; it is %s",
+                    value, value.getValueType()));
+        }
+
+        switch (value.toString())
+        {
+            case "RSA":
+                return RSA;
+            case "EC":
+                return EC;
+            case "oct":
+                return OCT;
+            default:
+
+                _logger.warning(() -> String.format("Unknown enumeration value '%s' given.", value));
+
+                throw new IllegalArgumentException("value");
+        }
+    }
 }
 

@@ -16,31 +16,20 @@
 
 package se.curity.oauth.jwt;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.codec.binary.Base64;
-
+import javax.json.JsonObject;
 import java.security.interfaces.RSAPublicKey;
-import java.util.LinkedHashMap;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class JwtValidatorWithCert extends AbstractJwtValidator
 {
     private static final Logger _logger = Logger.getLogger(JwtValidatorWithCert.class.getName());
 
-    private final Gson _gson = new GsonBuilder()
-            .disableHtmlEscaping()
-            .create();
-
     private final Map<String, RSAPublicKey> _keys;
 
-    public JwtValidatorWithCert(Map<String,RSAPublicKey> publicKeys)
+    JwtValidatorWithCert(Map<String,RSAPublicKey> publicKeys)
     {
         this._keys = publicKeys;
     }
@@ -54,7 +43,7 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
      * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
      */
     @Override
-    public Map<String, Object> validate(String jwt)
+    public JsonObject validate(String jwt)
     {
         String[] jwtParts = jwt.split("\\.");
 
@@ -65,37 +54,25 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
 
         String header = jwtParts[0];
         String body = jwtParts[1];
-        byte[] headerAndPayload = convertToBytes(header + "." + jwtParts[1]);
-        Base64 base64 = new Base64(true);
+        JwtHeader jwtHeader = decodeJwtHeader(header);
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> headerMap = _gson.fromJson(
-                new String(base64.decode(header), Charsets.UTF_8), Map.class);
+        String alg = jwtHeader.getAlgorithm();
 
-        String alg = headerMap.get("alg");
-        String x5t256 = headerMap.get("x5t#S256");
-
-        Preconditions.checkArgument(!isNullOrEmpty(alg), "alg is not present in JWT");
+        assert alg != null && alg.length() > 0 : "alg is not present in JWT";
 
         if (canRecognizeAlg(alg))
         {
+            String x5t256 = jwtHeader.getString("x5t#S256");
             Optional<RSAPublicKey> maybeWebKey = getJsonWebKeyForCertThumbprint(x5t256);
 
             if (maybeWebKey.isPresent())
             {
-                byte[] signatureData = base64.decode(jwtParts[2]);
+                byte[] signatureData = Base64.getUrlDecoder().decode(jwtParts[2]);
+                byte[] headerAndPayload = convertToBytes(header + "." + jwtParts[1]);
 
                 if (validateSignature(headerAndPayload, signatureData, maybeWebKey.get()))
                 {
-                    Map<?, ?> map = _gson.fromJson(new String(base64.decode(body), Charsets.UTF_8), Map.class);
-                    Map<String, Object> result = new LinkedHashMap<>(map.size());
-
-                    for (Map.Entry entry : map.entrySet())
-                    {
-                        result.put(entry.getKey().toString(), entry.getValue());
-                    }
-
-                    return result;
+                    return decodeJwtBody(body);
                 }
             }
 
@@ -103,7 +80,8 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
         }
         else
         {
-            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s", headerMap.get("alg")));
+            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s",
+                    jwtHeader.getAlgorithm()));
         }
 
         return null;

@@ -16,31 +16,38 @@
 
 package se.curity.oauth.opaque;
 
-@SuppressWarnings("unused") // Instantiated by GSON which sets these private fields based on a JSON object's values
-public class OAuthIntrospectResponse
+class OAuthIntrospectResponse
 {
-    private boolean active;
-    private String sub;
-    private String scope;
-    private long exp;
+    private final boolean _active;
+    private final String _subject;
+    private final String _scope;
+    private final long _expiration;
 
-    public boolean getActive()
+    OAuthIntrospectResponse(boolean active, String subject, String scope, long expiration)
     {
-        return active;
+        _active = active;
+        _subject = subject;
+        _scope = scope;
+        _expiration = expiration;
     }
 
-    public String getSub()
+    boolean getActive()
     {
-        return sub;
+        return _active;
     }
 
-    public String getScope()
+    String getSubject()
     {
-        return scope;
+        return _subject;
     }
 
-    public long getExp()
+    String getScope()
     {
-        return exp;
+        return _scope;
+    }
+
+    long getExpiration()
+    {
+        return _expiration;
     }
 }

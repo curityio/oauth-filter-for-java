@@ -22,13 +22,13 @@ import org.apache.http.client.HttpClient;
 import se.curity.oauth.jwt.JwtValidator;
 import se.curity.oauth.jwt.JwtValidatorWithJwk;
 
+import javax.json.JsonObject;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -126,11 +126,11 @@ public class OAuthJwtFilter extends OAuthFilter
 
         try
         {
-            Map<String, Object> validationResult = _jwtValidator.validate(token);
+            JsonObject validationResult = _jwtValidator.validate(token);
 
             if (!validationResult.isEmpty())
             {
-                result = AuthenticatedUser.fromMap(validationResult);
+                result = AuthenticatedUser.from(validationResult);
             }
         }
         catch (Exception e)

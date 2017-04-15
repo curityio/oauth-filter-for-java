@@ -16,13 +16,21 @@
 
 package se.curity.oauth;
 
-import com.google.common.base.Preconditions;
-
-import java.util.Map;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 public class AuthenticatedUser
 {
+    private static final BiFunction<JsonObject, String, String> _toStringFn = (jsonObject, name) -> Optional
+            .ofNullable(jsonObject.get(name))
+            .filter(it -> it.getValueType() == JsonValue.ValueType.STRING)
+            .map(it -> ((JsonString) it).getString())
+            .orElse(null);
+
     private final String _sub;
     private final String _scope;
 
@@ -42,11 +50,13 @@ public class AuthenticatedUser
         return Optional.ofNullable(_scope);
     }
 
-    static AuthenticatedUser fromMap(Map<String, Object> tokenData)
+    static AuthenticatedUser from(JsonObject tokenData)
     {
-        Preconditions.checkNotNull(tokenData.get("sub"));
-        String sub = (String)tokenData.get("sub");
-        String scope = (String) tokenData.get("scope");
+        Objects.requireNonNull(tokenData);
+        Objects.requireNonNull(tokenData.get("sub"));
+
+        String sub = _toStringFn.apply(tokenData, "sub");
+        String scope = _toStringFn.apply(tokenData, "scope");
 
         return new AuthenticatedUser(sub, scope);
     }

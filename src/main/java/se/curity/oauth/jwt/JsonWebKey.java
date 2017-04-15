@@ -16,59 +16,76 @@
 
 package se.curity.oauth.jwt;
 
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import java.util.Optional;
+
 class JsonWebKey
 {
-    private JsonWebKeyType kty;
-    private String kid;
-    private String use;
-    private String alg;
-    private String x;
-    private String y;
-    private String crv;
-    private String n;
-    private String e;
+    private final JsonObject _jsonObject;
 
-    String getKid()
+    private JsonWebKeyType _keyType;
+
+    JsonWebKey(JsonObject jsonObject)
     {
-        return kid;
+        _jsonObject = jsonObject;
+
+        JsonValue jsonValue = jsonObject.get("kty");
+
+        _keyType = JsonWebKeyType.from(jsonValue);
     }
 
-    JsonWebKeyType getKty(){
-        return kty;
+    String getKeyId()
+    {
+        return getString("kid");
+    }
+
+    JsonWebKeyType getKeyType()
+    {
+        return _keyType;
     }
 
     String getUse()
     {
-        return use;
+        return getString("use");
     }
 
-    String getX()
+    String getXCoordinate()
     {
-        return x;
+        return getString("x");
     }
 
-    String getY()
+    String getYCoordinate()
     {
-        return y;
+        return getString("y");
     }
 
-    String getCrv()
+    String getEllipticalCurve()
     {
-        return crv;
+        return getString("crv");
     }
 
     String getModulus()
     {
-        return n;
+        return getString("n");
     }
 
     String getExponent()
     {
-        return e;
+        return getString("e");
     }
 
-    String getAlg()
+    String getAlgorithm()
     {
-        return alg;
+        return getString("alg");
+    }
+
+    private String getString(String name)
+    {
+        return Optional.ofNullable(_jsonObject.get(name))
+                .filter(it -> it.getValueType() == JsonValue.ValueType.STRING)
+                .map(it -> ((JsonString) it).getString())
+                .orElse(null);
     }
 }

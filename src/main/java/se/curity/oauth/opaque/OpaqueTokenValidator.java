@@ -18,9 +18,6 @@ package se.curity.oauth.opaque;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -31,8 +28,12 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -43,11 +44,6 @@ import java.util.logging.Logger;
 public class OpaqueTokenValidator implements Closeable
 {
     private static final Logger _logger = Logger.getLogger(OpaqueTokenValidator.class.getName());
-
-    private final Gson _gson = new GsonBuilder()
-            .disableHtmlEscaping()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create();
 
     private final URI _introspectionUri;
     private final String _clientId;
@@ -79,7 +75,7 @@ public class OpaqueTokenValidator implements Closeable
 
         if (response.getActive())
         {
-            OpaqueToken newToken = new OpaqueToken(response.getSub(), response.getExp(),response.getScope());
+            OpaqueToken newToken = new OpaqueToken(response.getSubject(), response.getExpiration(),response.getScope());
 
             if (newToken.getExpiresAt().isAfter(Instant.now()))
             {
@@ -120,9 +116,13 @@ public class OpaqueTokenValidator implements Closeable
         return EntityUtils.toString(response.getEntity(), Charsets.UTF_8);
     }
 
-    protected OAuthIntrospectResponse parseIntrospectResponse(String introspectJson)
+    private OAuthIntrospectResponse parseIntrospectResponse(String introspectJson)
     {
-        return _gson.fromJson(introspectJson, OAuthIntrospectResponse.class);
+        JsonReader jsonReader = Json.createReader(new StringReader(introspectJson));
+        JsonObject jsonObject = jsonReader.readObject();
+
+        return new OAuthIntrospectResponse(jsonObject.getBoolean("active"), jsonObject.getString("sub"),
+                jsonObject.getString("scope"), jsonObject.getInt("exp"));
     }
 
     @Override

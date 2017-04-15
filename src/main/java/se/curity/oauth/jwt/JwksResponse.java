@@ -16,14 +16,38 @@
 
 package se.curity.oauth.jwt;
 
-import java.util.ArrayList;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class JwksResponse
 {
-    private ArrayList<JsonWebKey> keys;
+    private final List<JsonWebKey> _keys;
 
-    ArrayList<JsonWebKey> getKeys()
+    JwksResponse(JsonObject jsonObject)
     {
-        return this.keys;
+        JsonValue keys = jsonObject.get("keys");
+
+        if (keys.getValueType() != JsonValue.ValueType.ARRAY)
+        {
+            _keys = Collections.emptyList();
+        }
+        else
+        {
+            _keys = Stream.of((JsonArray)keys)
+                    .filter(it -> it.getValueType() == JsonValue.ValueType.OBJECT)
+                    .map(it -> (JsonObject) it)
+                    .map(JsonWebKey::new)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    List<JsonWebKey> getKeys()
+    {
+        return _keys;
     }
 }

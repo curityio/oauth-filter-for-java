@@ -19,9 +19,6 @@ package se.curity.oauth.jwt;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -29,8 +26,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -47,12 +48,6 @@ final class JwkManager implements Closeable
     private static final Logger _logger = Logger.getLogger(JwkManager.class.getName());
 
     private final URI _jwksUri;
-
-    private final Gson _gson = new GsonBuilder()
-            .disableHtmlEscaping()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create();
-
     private final TimeBasedCache<String, JsonWebKey> _jsonWebKeyByKID;
     private final HttpClient _httpClient;
     private final ScheduledExecutorService _executor = Executors.newSingleThreadScheduledExecutor();
@@ -97,7 +92,7 @@ final class JwkManager implements Closeable
 
             for (JsonWebKey key : response.getKeys())
             {
-                newKeys.put(key.getKid(), key);
+                newKeys.put(key.getKeyId(), key);
             }
 
             _logger.info(() -> String.format("Fetched JsonWebKeys: %s", newKeys));
@@ -132,7 +127,10 @@ final class JwkManager implements Closeable
 
     private JwksResponse parseJwksResponse(String response)
     {
-        return _gson.fromJson(response, JwksResponse.class);
+        JsonReader jsonReader = Json.createReader(new StringReader(response));
+        JsonObject jsonObject = jsonReader.readObject();
+
+        return new JwksResponse(jsonObject);
     }
 
     private void ensureCacheIsFresh()

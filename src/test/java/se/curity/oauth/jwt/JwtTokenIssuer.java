@@ -16,8 +16,8 @@
 
 package se.curity.oauth.jwt;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.owlike.genson.Genson;
+import com.owlike.genson.GensonBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,21 +48,23 @@ public class JwtTokenIssuer
     private final Certificate cert;
     private final String keyId;
 
-    private final Gson _gson = new GsonBuilder()
-            .disableHtmlEscaping()
+    private final Genson _genson = new GensonBuilder()
+            .setHtmlSafe(false)
             .create();
 
     //Issue Unsigned token.
-    public JwtTokenIssuer(String issuer){
+    public JwtTokenIssuer(String issuer)
+    {
 
-        this(issuer,0, AlgorithmIdentifiers.NONE, null, null,null);
+        this(issuer, 0, AlgorithmIdentifiers.NONE, null, null, null);
     }
 
     //Certs
-    public JwtTokenIssuer(String issuer, PrivateKey privateKey, Certificate cert)
+    JwtTokenIssuer(String issuer, PrivateKey privateKey, Certificate cert)
     {
         this(issuer, 0, AlgorithmIdentifiers.RSA_USING_SHA256, privateKey, cert, null);
     }
+
     //JWKS
     public JwtTokenIssuer(String issuer, PrivateKey privateKey, String keyId)
     {
@@ -74,14 +76,17 @@ public class JwtTokenIssuer
     {
         this(issuer, 0, algorithm, privateKey, cert, null);
     }
-    //JWKS
-    public JwtTokenIssuer(String issuer, String algorithm, PrivateKey privateKey, String keyId){
 
-        this(issuer,0,algorithm,privateKey,null, keyId);
+    //JWKS
+    public JwtTokenIssuer(String issuer, String algorithm, PrivateKey privateKey, String keyId)
+    {
+
+        this(issuer, 0, algorithm, privateKey, null, keyId);
     }
 
     //The full constructor
-    private JwtTokenIssuer(String issuer, int skewTolerance, String algorithm, PrivateKey privateKey, Certificate cert, String keyId)
+    private JwtTokenIssuer(String issuer, int skewTolerance, String algorithm, PrivateKey privateKey, Certificate
+            cert, String keyId)
     {
         this.issuer = issuer;
         this.skewTolerance = skewTolerance * 60;
@@ -91,7 +96,7 @@ public class JwtTokenIssuer
         this.keyId = keyId;
     }
 
-    public String issueToken(String subject, String audience, int lifetimeInMinutes, Map<String, Object> attributes)
+    String issueToken(String subject, String audience, int lifetimeInMinutes, Map<String, Object> attributes)
             throws Exception
     {
 
@@ -100,20 +105,25 @@ public class JwtTokenIssuer
         return issueToken(subject, Arrays.asList(audiences), lifetimeInMinutes, attributes);
     }
 
-    public String issueToken(String subject, List<String> audiences, int lifetimeInMinutes, Map<String, Object> attributes)
+    private String issueToken(String subject, List<String> audiences, int lifetimeInMinutes, Map<String, Object>
+            attributes)
             throws Exception
     {
         Map<String, Object> claims = new LinkedHashMap<>();
 
         //Store the initial attributes
-        for(String key : attributes.keySet()){
+        for (String key : attributes.keySet())
+        {
             claims.put(key, attributes.get(key));
         }
 
         JsonWebSignature token = new JsonWebSignature();
-        if(AlgorithmIdentifiers.NONE.equals(this.algorithm) && privateKey == null){
+
+        if (AlgorithmIdentifiers.NONE.equals(this.algorithm) && privateKey == null)
+        {
             token.setAlgorithmConstraints(AlgorithmConstraints.ALLOW_ONLY_NONE);
         }
+
         long issuedAt = Instant.now().getEpochSecond();
         long expirationTime = lifetimeInMinutes * 60 + issuedAt + skewTolerance;
 
@@ -126,12 +136,14 @@ public class JwtTokenIssuer
         claims.put(ReservedClaimNames.EXPIRATION_TIME, expirationTime);
         claims.put(ReservedClaimNames.JWT_ID, UUID.randomUUID().toString());
 
-        String payload = _gson.toJson(claims);
+        String payload = _genson.serialize(claims);
 
         token.setHeader(ReservedClaimNames.ISSUER, issuer);
 
-        try {
-            if(this.cert != null){
+        try
+        {
+            if (this.cert != null)
+            {
                 byte[] x5t = DigestUtils.sha(this.cert.getEncoded());
                 byte[] x5tS256 = DigestUtils.sha256(this.cert.getEncoded());
 
@@ -146,20 +158,24 @@ public class JwtTokenIssuer
 
 
             }
-            else if(this.keyId != null)
+            else if (this.keyId != null)
             {
                 token.setKeyIdHeaderValue(this.keyId);
             }
         }
 
-        catch(CertificateEncodingException ce){
+        catch (CertificateEncodingException ce)
+        {
             throw new Exception("Unknown certificate encoding", ce);
         }
 
         token.setPayload(payload);
-        if(privateKey != null){
+
+        if (privateKey != null)
+        {
             token.setKey(privateKey);     //Can be null for "none" algorithm
         }
+
         token.setAlgorithmHeaderValue(algorithm);
 
         try
@@ -171,7 +187,8 @@ public class JwtTokenIssuer
             {
                 //With jose4j version 0.3.4 the getPayload will perform a Verify operation
                 //This requires the Public Key to be set as the Key.
-                if(this.cert != null) {
+                if (this.cert != null)
+                {
                     token.setKey(cert.getPublicKey());
                     String headers = token.getHeader();
                     String body = token.getPayload();
@@ -182,6 +199,7 @@ public class JwtTokenIssuer
 
                     logger.trace(message);
                 }
+                
                 logger.trace(serializedToken);
             }
 
@@ -195,14 +213,17 @@ public class JwtTokenIssuer
         }
     }
 
-    private String[] stringToArray(String str){
-        String [] ret;
+    private String[] stringToArray(String str)
+    {
+        String[] ret;
         ret = str.split(" ");
         return ret;
     }
 
-    private Object arrayOrString(List data){
-        if(data.size() == 1){
+    private Object arrayOrString(List data)
+    {
+        if (data.size() == 1)
+        {
             return data.get(0);
         }
         return data;
