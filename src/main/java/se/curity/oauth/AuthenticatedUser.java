@@ -17,20 +17,11 @@
 package se.curity.oauth;
 
 import javax.json.JsonObject;
-import javax.json.JsonString;
-import javax.json.JsonValue;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 public class AuthenticatedUser
 {
-    private static final BiFunction<JsonObject, String, String> _toStringFn = (jsonObject, name) -> Optional
-            .ofNullable(jsonObject.get(name))
-            .filter(it -> it.getValueType() == JsonValue.ValueType.STRING)
-            .map(it -> ((JsonString) it).getString())
-            .orElse(null);
-
     private final String _sub;
     private final String _scope;
 
@@ -55,8 +46,8 @@ public class AuthenticatedUser
         Objects.requireNonNull(tokenData);
         Objects.requireNonNull(tokenData.get("sub"));
 
-        String sub = _toStringFn.apply(tokenData, "sub");
-        String scope = _toStringFn.apply(tokenData, "scope");
+        String sub = JsonUtils.getString(tokenData, "sub");
+        String scope = JsonUtils.getString(tokenData, "scope");
 
         return new AuthenticatedUser(sub, scope);
     }

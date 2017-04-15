@@ -20,12 +20,9 @@ import com.google.common.base.Charsets;
 import org.apache.commons.codec.binary.Base64;
 import se.curity.oauth.JsonUtils;
 
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
-import javax.json.JsonString;
-import javax.json.JsonValue;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
@@ -82,11 +79,11 @@ public abstract class AbstractJwtValidator implements JwtValidator
 
         try
         {
-            long exp = getLong(jsonObject, "exp");
-            long iat = getLong(jsonObject, "iat");
+            long exp = JsonUtils.getLong(jsonObject, "exp");
+            long iat = JsonUtils.getLong(jsonObject, "iat");
 
-            String aud = getString(jsonObject, "aud");
-            String iss = getString(jsonObject, "iss");
+            String aud = JsonUtils.getString(jsonObject, "aud");
+            String iss = JsonUtils.getString(jsonObject, "iss");
 
             assert !isNullOrEmpty(aud) : "aud claim is not present in JWT";
             assert !isNullOrEmpty(iss) : "iss claim is not present in JWT";
@@ -200,22 +197,6 @@ public abstract class AbstractJwtValidator implements JwtValidator
         });
     }
 
-    private String getString(JsonObject jsonObject, String name)
-    {
-        return Optional.ofNullable(jsonObject.get(name))
-                .filter(it -> it.getValueType() == JsonValue.ValueType.STRING)
-                .map(it -> ((JsonString) it).getString())
-                .orElse(null);
-    }
-
-    private static long getLong(JsonObject jsonObject, String name)
-    {
-        return Optional.ofNullable(jsonObject.get(name))
-                .filter(it -> it.getValueType() == JsonValue.ValueType.NUMBER)
-                .map(it -> ((JsonNumber) it).longValue())
-                .orElse(Long.MIN_VALUE);
-    }
-
     class JwtHeader
     {
         private final JsonObject _jsonObject;
@@ -237,7 +218,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
 
         String getString(String name)
         {
-            return AbstractJwtValidator.this.getString(_jsonObject, name);
+            return JsonUtils.getString(_jsonObject, name);
         }
     }
 }

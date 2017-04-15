@@ -16,9 +16,14 @@
 
 package se.curity.oauth;
 
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
 import javax.json.JsonReaderFactory;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import javax.json.spi.JsonProvider;
 import java.util.Collections;
+import java.util.Optional;
 
 public final class JsonUtils
 {
@@ -29,5 +34,21 @@ public final class JsonUtils
     public static JsonReaderFactory createDefaultReaderFactory()
     {
         return JsonProvider.provider().createReaderFactory(Collections.emptyMap());
+    }
+
+    public static String getString(JsonObject jsonObject, String name)
+    {
+        return Optional.ofNullable(jsonObject.get(name))
+                .filter(it -> it.getValueType() == JsonValue.ValueType.STRING)
+                .map(it -> ((JsonString) it).getString())
+                .orElse(null);
+    }
+
+    public static long getLong(JsonObject jsonObject, String name)
+    {
+        return Optional.ofNullable(jsonObject.get(name))
+                .filter(it -> it.getValueType() == JsonValue.ValueType.NUMBER)
+                .map(it -> ((JsonNumber) it).longValue())
+                .orElse(Long.MIN_VALUE);
     }
 }
