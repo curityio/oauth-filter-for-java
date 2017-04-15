@@ -13,7 +13,7 @@
 <Configuration>
     <Appenders>
         <Console name="stdout" target="SYSTEM_OUT">
-            <PatternLayout noConsoleNoAnsi="true" pattern="%date{yyyy-MM-dd'T'HH:mm:ss:SSSZ} %highlight{%-5level}{FATAL=blink bright red, ERROR=bright red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=white} %highlight{{%thread}}{FATAL=white, ERROR=white, WARN=white, INFO=white, DEBUG=white, TRACE=white} %highlight{%logger:%line %msg%n}{FATAL=blink bright red, ERROR=bright red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=white}"/>
+            <PatternLayout noConsoleNoAnsi="true" pattern="%date{yyyy-MM-dd'T'HH:mm:ss:SSSZ} %-5level {%thread} %logger:%line %msg%n"/>
         </Console>
     </Appenders>
     <Loggers>
