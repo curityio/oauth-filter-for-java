@@ -16,7 +16,6 @@
 
 package se.curity.oauth.jwt;
 
-import com.google.common.base.Charsets;
 import org.apache.commons.codec.binary.Base64;
 import se.curity.oauth.JsonUtils;
 
@@ -26,6 +25,7 @@ import javax.json.JsonReaderFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.time.Instant;
@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 public abstract class AbstractJwtValidator implements JwtValidator
 {
@@ -85,8 +83,8 @@ public abstract class AbstractJwtValidator implements JwtValidator
             String aud = JsonUtils.getString(jsonObject, "aud");
             String iss = JsonUtils.getString(jsonObject, "iss");
 
-            assert !isNullOrEmpty(aud) : "aud claim is not present in JWT";
-            assert !isNullOrEmpty(iss) : "iss claim is not present in JWT";
+            assert aud != null && aud.length() > 0 : "aud claim is not present in JWT";
+            assert iss != null && iss.length() > 0 : "iss claim is not present in JWT";
 
             if (!aud.equals(audience))
             {
@@ -178,7 +176,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
         return _decodedJwtBodyByEncodedBody.computeIfAbsent(body, key ->
         {
             // TODO: Switch to stream
-            String decodedBody = new String(java.util.Base64.getUrlDecoder().decode(body), Charsets.UTF_8);
+            String decodedBody = new String(java.util.Base64.getUrlDecoder().decode(body), StandardCharsets.UTF_8);
             JsonReader jsonBodyReader = _jsonReaderFactory.createReader(new StringReader(decodedBody));
 
             return jsonBodyReader.readObject();
@@ -190,7 +188,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
         return _decodedJwtHeaderByEncodedHeader.computeIfAbsent(header, key ->
         {
             Base64 base64 = new Base64(true);
-            String decodedHeader = new String(base64.decode(header), Charsets.UTF_8);
+            String decodedHeader = new String(base64.decode(header), StandardCharsets.UTF_8);
             JsonReader jsonHeaderReader = _jsonReaderFactory.createReader(new StringReader(decodedHeader));
 
             return new JwtHeader(jsonHeaderReader.readObject());

@@ -16,7 +16,6 @@
 
 package se.curity.oauth;
 
-import com.google.common.io.Closeables;
 import org.apache.http.client.HttpClient;
 import se.curity.oauth.opaque.OpaqueToken;
 import se.curity.oauth.opaque.OpaqueTokenValidator;
@@ -142,13 +141,18 @@ public class OAuthOpaqueFilter extends OAuthFilter
     @Override
     public void destroy()
     {
-        try
+        _logger.info("Destroying OAuthFilter");
+
+        if (_opaqueTokenValidator != null)
         {
-            Closeables.close(_opaqueTokenValidator, true);
-        }
-        catch (IOException e)
-        {
-            _logger.log(Level.WARNING, "Problem closing jwk client", e);
+            try
+            {
+                _opaqueTokenValidator.close();
+            }
+            catch (IOException e)
+            {
+                _logger.log(Level.WARNING, "Problem closing jwk client", e);
+            }
         }
     }
 }

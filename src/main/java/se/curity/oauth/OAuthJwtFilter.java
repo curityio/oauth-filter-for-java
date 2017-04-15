@@ -16,7 +16,6 @@
 
 package se.curity.oauth;
 
-import com.google.common.io.Closeables;
 import org.apache.http.client.HttpClient;
 import se.curity.oauth.jwt.JwtValidator;
 import se.curity.oauth.jwt.JwtValidatorWithJwk;
@@ -154,13 +153,16 @@ public class OAuthJwtFilter extends OAuthFilter
     {
         _logger.info("Destroying OAuthFilter");
 
-        try
+        if (_jwtValidator != null)
         {
-            Closeables.close(_jwtValidator, true);
-        }
-        catch (IOException e)
-        {
-            _logger.log(Level.WARNING, "Problem closing jwk client", e);
+            try
+            {
+                _jwtValidator.close();
+            }
+            catch (IOException e)
+            {
+                _logger.log(Level.WARNING, "Problem closing jwk client", e);
+            }
         }
     }
 }

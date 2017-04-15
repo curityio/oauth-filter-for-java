@@ -16,11 +16,11 @@
 
 package se.curity.oauth.jwt;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -40,23 +40,23 @@ public class TimeBasedCache<K, V>
 {
     private final Object _cacheLock = new Object();
 
-    private volatile ImmutableMap<K, V> _cache;
+    private volatile Map<K, V> _cache;
     private volatile Instant _nextLoadingEarliestTime = Instant.MIN;
 
     private volatile Instant _lastLoading;
 
     private final Duration _minTimeBetweenReloads;
-    private final Supplier<ImmutableMap<K, V>> _valuesSupplier;
+    private final Supplier<Map<K, V>> _valuesSupplier;
     private final Clock _clock;
 
-    public TimeBasedCache(Duration minTimeBetweenReloads, Supplier<ImmutableMap<K, V>> valuesSupplier)
+    public TimeBasedCache(Duration minTimeBetweenReloads, Supplier<Map<K, V>> valuesSupplier)
     {
-        this(minTimeBetweenReloads, valuesSupplier, ImmutableMap.of(), Clock.systemDefaultZone());
+        this(minTimeBetweenReloads, valuesSupplier, Collections.emptyMap(), Clock.systemDefaultZone());
     }
 
     public TimeBasedCache(Duration minTimeBetweenReloads,
-                          Supplier<ImmutableMap<K, V>> valuesSupplier,
-                          ImmutableMap<K, V> initialCache,
+                          Supplier<Map<K, V>> valuesSupplier,
+                          Map<K, V> initialCache,
                           Clock clock)
     {
         _minTimeBetweenReloads = minTimeBetweenReloads;
@@ -88,7 +88,7 @@ public class TimeBasedCache<K, V>
     {
         synchronized (_cacheLock)
         {
-            _cache = ImmutableMap.of();
+            _cache = Collections.emptyMap();
         }
     }
 

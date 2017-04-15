@@ -16,9 +16,6 @@
 
 package se.curity.oauth;
 
-import com.google.common.collect.Sets;
-import com.google.common.net.HttpHeaders;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -29,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,8 +36,10 @@ public abstract class OAuthFilter implements Filter
 {
     private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
 
-    public static final String PRINCIPAL = "principal";
+    private static final String PRINCIPAL = "principal";
     private static final String[] NO_PRESENTED_SCOPES = new String[0];
+    private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
+    private static final String AUTHORIZATION = "Authorization";
 
     @Override
     public abstract void init(FilterConfig filterConfig) throws ServletException;
@@ -100,7 +100,7 @@ public abstract class OAuthFilter implements Filter
     {
         String msg = String.format("Bearer realm=\"%s\"", oauthHost);
 
-        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, msg);
+        response.setHeader(WWW_AUTHENTICATE, msg);
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
@@ -108,7 +108,7 @@ public abstract class OAuthFilter implements Filter
     {
         String msg = String.format("Bearer realm=\"%s\"", oauthHost);
 
-        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, msg);
+        response.setHeader(WWW_AUTHENTICATE, msg);
         response.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
 
@@ -154,7 +154,7 @@ public abstract class OAuthFilter implements Filter
         }
 
         String[] presentedScopes = scopesInToken == null ? NO_PRESENTED_SCOPES : scopesInToken.split("\\s+");
-        Set<String> presentedScopesList = Sets.newHashSet(presentedScopes);
+        Set<String> presentedScopesList = new HashSet<>(Arrays.asList(presentedScopes));
 
         return presentedScopesList.containsAll(requiredScopes);
     }
@@ -167,7 +167,7 @@ public abstract class OAuthFilter implements Filter
     private Optional<String> extractAccessTokenFromHeader(ServletRequest request)
     {
         HttpServletRequest httpRequest = (HttpServletRequest)request;
-        String authorizationHeader = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
+        String authorizationHeader = httpRequest.getHeader(AUTHORIZATION);
         String result = null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer"))

@@ -16,12 +16,13 @@
 
 package se.curity.oauth.jwt;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -32,7 +33,6 @@ import static org.mockito.Mockito.when;
 
 public class TimeBasedCacheTest
 {
-
     @Test
     public void doesNotReloadCacheWithinTimeLimit()
             throws Exception
@@ -51,19 +51,18 @@ public class TimeBasedCacheTest
                 now.plus(Duration.ofSeconds(8))); // get("1") - reload
 
         @SuppressWarnings("unchecked")
-        Supplier<ImmutableMap> fakeSupplier = mock(Supplier.class);
+        Supplier<Map> fakeSupplier = mock(Supplier.class);
         when(fakeSupplier.get()).thenReturn(
-                ImmutableMap.of("0", 0),
-                ImmutableMap.of("1", 1));
+                Collections.singletonMap("0", 0),
+                Collections.singletonMap("1", 1));
 
         // the map will always contain a single entry with the number of reloads as in
         // ("reloads" -> reloads)
         AtomicInteger reloads = new AtomicInteger(0);
 
         TimeBasedCache<String, Integer> cache = new TimeBasedCache<>(Duration.ofSeconds(5),
-                () -> ImmutableMap.copyOf(ImmutableMap.of(Integer.toString(reloads.get()),
-                        reloads.getAndIncrement())),
-                ImmutableMap.of(), fakeClock);
+                () -> Collections.singletonMap(Integer.toString(reloads.get()), reloads.getAndIncrement()),
+                Collections.emptyMap(), fakeClock);
 
         // should have only ("0" -> 0) in the map in the beginning
         assertNotNull(cache.get("0"));

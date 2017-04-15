@@ -16,8 +16,6 @@
 
 package se.curity.oauth.opaque;
 
-import com.google.common.base.Charsets;
-import com.google.common.net.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -36,6 +34,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +44,7 @@ import java.util.logging.Logger;
 public class OpaqueTokenValidator implements Closeable
 {
     private static final Logger _logger = Logger.getLogger(OpaqueTokenValidator.class.getName());
+    private static final String ACCEPT = "Accept";
 
     private final URI _introspectionUri;
     private final String _clientId;
@@ -102,7 +102,7 @@ public class OpaqueTokenValidator implements Closeable
     {
         HttpPost post = new HttpPost(_introspectionUri);
 
-        post.setHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
+        post.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
 
         List<NameValuePair> params = new ArrayList<>(3);
 
@@ -121,7 +121,7 @@ public class OpaqueTokenValidator implements Closeable
             throw new IOException("Got error from introspection server: " + response.getStatusLine().getStatusCode());
         }
 
-        return EntityUtils.toString(response.getEntity(), Charsets.UTF_8);
+        return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
     }
 
     private OAuthIntrospectResponse parseIntrospectResponse(String introspectJson)
