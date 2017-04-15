@@ -16,7 +16,6 @@
 
 package se.curity.oauth;
 
-import javax.json.JsonObject;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -41,14 +40,14 @@ public class AuthenticatedUser
         return Optional.ofNullable(_scope);
     }
 
-    static AuthenticatedUser from(JsonObject tokenData)
+    static AuthenticatedUser from(TokenData tokenData)
     {
         Objects.requireNonNull(tokenData);
-        Objects.requireNonNull(tokenData.get("sub"));
 
-        String sub = JsonUtils.getString(tokenData, "sub");
-        String scope = JsonUtils.getString(tokenData, "scope");
+        String subject = tokenData.getSubject();
 
-        return new AuthenticatedUser(sub, scope);
+        Objects.requireNonNull(subject);
+
+        return new AuthenticatedUser(subject, tokenData.getScope());
     }
 }

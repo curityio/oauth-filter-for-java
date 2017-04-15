@@ -16,13 +16,8 @@
 
 package se.curity.oauth.jwt;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
 import se.curity.oauth.JsonUtils;
+import se.curity.oauth.WebKeysClient;
 
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -30,8 +25,6 @@ import javax.json.JsonReaderFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -48,22 +41,20 @@ final class JwkManager implements Closeable
     private static final Logger _logger = Logger.getLogger(JwkManager.class.getName());
     private static final String ACCEPT = "Accept";
 
-    private final URI _jwksUri;
     private final TimeBasedCache<String, JsonWebKey> _jsonWebKeyByKID;
-    private final HttpClient _httpClient;
+    private final WebKeysClient _webKeysClient;
     private final ScheduledExecutorService _executor = Executors.newSingleThreadScheduledExecutor();
     private final JsonReaderFactory _jsonReaderFactory;
 
-    JwkManager(URI jwksUri, long minKidReloadTimeInSeconds, HttpClient httpClient)
+    JwkManager(long minKidReloadTimeInSeconds, WebKeysClient webKeysClient)
     {
-        this(jwksUri, minKidReloadTimeInSeconds, httpClient, JsonUtils.createDefaultReaderFactory());
+        this(minKidReloadTimeInSeconds, webKeysClient, JsonUtils.createDefaultReaderFactory());
     }
 
-    JwkManager(URI jwksUri, long minKidReloadTimeInSeconds, HttpClient httpClient, JsonReaderFactory jsonReaderFactory)
+    JwkManager(long minKidReloadTimeInSeconds, WebKeysClient webKeysClient, JsonReaderFactory jsonReaderFactory)
     {
-        _jwksUri = jwksUri;
         _jsonWebKeyByKID = new TimeBasedCache<>(Duration.ofSeconds(minKidReloadTimeInSeconds), this::reload);
-        _httpClient = httpClient;
+        _webKeysClient = webKeysClient;
         _jsonReaderFactory = jsonReaderFactory;
 
         // invalidate the cache periodically to avoid stale state
@@ -95,7 +86,7 @@ final class JwkManager implements Closeable
 
         try
         {
-            JwksResponse response = parseJwksResponse(fetchKeys());
+            JwksResponse response = parseJwksResponse(_webKeysClient.getKeys());
 
             for (JsonWebKey key : response.getKeys())
             {
@@ -108,28 +99,10 @@ final class JwkManager implements Closeable
         }
         catch (IOException e)
         {
-            _logger.log(Level.SEVERE, "Could not contact Jwks Server at " + _jwksUri, e);
+            _logger.log(Level.SEVERE, "Could not contact JWKS Server", e);
 
             return Collections.emptyMap();
         }
-    }
-
-    private String fetchKeys() throws IOException
-    {
-        HttpGet get = new HttpGet(_jwksUri);
-
-        get.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
-
-        HttpResponse response = _httpClient.execute(get);
-
-        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
-        {
-            _logger.severe(() -> "Got error from Jwks server: " + response.getStatusLine().getStatusCode());
-
-            throw new IOException("Got error from Jwks server: " + response.getStatusLine().getStatusCode());
-        }
-
-        return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
     }
 
     private JwksResponse parseJwksResponse(String response)
@@ -161,9 +134,9 @@ final class JwkManager implements Closeable
     {
         _executor.shutdown();
 
-        if (_httpClient instanceof Closeable)
+        if (_webKeysClient instanceof Closeable)
         {
-            ((Closeable) _httpClient).close();
+            ((Closeable) _webKeysClient).close();
         }
     }
 }

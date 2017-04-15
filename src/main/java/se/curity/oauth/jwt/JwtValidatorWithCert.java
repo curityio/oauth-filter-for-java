@@ -18,7 +18,6 @@ package se.curity.oauth.jwt;
 
 import se.curity.oauth.JsonUtils;
 
-import javax.json.JsonObject;
 import javax.json.JsonReaderFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
@@ -53,7 +52,7 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
      * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
      */
     @Override
-    public JsonObject validate(String jwt)
+    public Optional<JwtData> validate(String jwt)
     {
         String[] jwtParts = jwt.split("\\.");
 
@@ -82,7 +81,7 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
 
                 if (validateSignature(headerAndPayload, signatureData, maybeWebKey.get()))
                 {
-                    return decodeJwtBody(body);
+                    return Optional.of(new JwtData(decodeJwtBody(body)));
                 }
             }
 
@@ -94,7 +93,7 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
                     jwtHeader.getAlgorithm()));
         }
 
-        return null;
+        return Optional.empty();
     }
 
     private boolean canRecognizeAlg(String alg)

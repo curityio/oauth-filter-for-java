@@ -16,20 +16,19 @@
 
 package se.curity.oauth.jwt;
 
-import org.apache.commons.codec.binary.Base64;
-
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Base64;
 
 class RsaPublicKeyCreator
 {
-    public static PublicKey createPublicKey(String modulus, String exponent) throws InvalidKeySpecException, NoSuchAlgorithmException
+    static PublicKey createPublicKey(String modulus, String exponent) throws InvalidKeySpecException, NoSuchAlgorithmException
     {
-        Base64 decoder = new Base64(true);
+        Base64.Decoder decoder = Base64.getDecoder();
         BigInteger bigModulus = new BigInteger(1, decoder.decode(modulus));
         BigInteger bigExponent = new BigInteger(1, decoder.decode(exponent));
         RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(bigModulus, bigExponent);

@@ -16,8 +16,6 @@
 
 package se.curity.oauth;
 
-import org.apache.http.client.HttpClient;
-import se.curity.oauth.opaque.OpaqueToken;
 import se.curity.oauth.opaque.OpaqueTokenValidator;
 
 import javax.json.JsonReaderFactory;
@@ -26,8 +24,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -40,20 +36,12 @@ public class OAuthOpaqueFilter extends OAuthFilter
 {
     private static final Logger _logger = Logger.getLogger(OAuthOpaqueFilter.class.getName());
 
-    private final HttpClient _httpClient = ExternalResourceLoader.getInstance().loadJwkHttpClient();
-
     private String _oauthHost = null;
     private String[] _scopes = null;
-    private OpaqueTokenValidator _opaqueTokenValidator = null;
+    private TokenValidator _opaqueTokenValidator = null;
 
     private interface InitParams
     {
-        String OAUTH_HOST = "oauthHost";
-        String OAUTH_PORT = "oauthPort";
-
-        String INTROSPECTION_PATH = "introspectionPath";
-        String CLIENT_ID = "clientId";
-        String CLIENT_SECRET = "clientSecret";
         String SCOPE = "scope";
     }
 
@@ -61,12 +49,6 @@ public class OAuthOpaqueFilter extends OAuthFilter
     {
         Map<String, String> initParams = initParamsMapFrom(filterConfig);
 
-        _oauthHost = getInitParamValue(InitParams.OAUTH_HOST, initParams);
-        int oauthPort = getInitParamValue(InitParams.OAUTH_PORT, initParams, Integer::parseInt);
-
-        String introspectionPath = getInitParamValue(InitParams.INTROSPECTION_PATH, initParams);
-        String clientId = getInitParamValue(InitParams.CLIENT_ID, initParams);
-        String clientSecret = getInitParamValue(InitParams.CLIENT_SECRET, initParams);
         String scope = getInitParamValue(InitParams.SCOPE, initParams);
 
         _scopes = scope.split("\\s+");
@@ -75,22 +57,7 @@ public class OAuthOpaqueFilter extends OAuthFilter
         {
             if (_opaqueTokenValidator == null)
             {
-                try
-                {
-                    // Like in the OAuthJwtFilter, we'll reuse the config of this filter + the service locator to
-                    // get a JsonReaderFactory
-                    JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
-                    URI introspectionUri = new URI("https", null, _oauthHost, oauthPort, introspectionPath, null, null);
-
-                    _opaqueTokenValidator = new OpaqueTokenValidator(introspectionUri, clientId, clientSecret,
-                            _httpClient, jsonReaderFactory);
-                }
-                catch (URISyntaxException e)
-                {
-                    _logger.log(Level.SEVERE, "Invalid parameters", e);
-
-                    throw new UnavailableException("Service is unavailable");
-                }
+                _opaqueTokenValidator = createTokenValidator(initParams);
 
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
@@ -102,7 +69,7 @@ public class OAuthOpaqueFilter extends OAuthFilter
     }
 
     @Override
-    protected String getOAuthHost() throws UnavailableException
+    protected String getOAuthServerRealm() throws UnavailableException
     {
         if (_oauthHost == null)
         {
@@ -114,25 +81,40 @@ public class OAuthOpaqueFilter extends OAuthFilter
 
     protected String[] getScopes() throws UnavailableException
     {
-        if (_scopes == null)
-        {
-            throw new UnavailableException("Filter not initialized");
-        }
-
-        return _scopes;
+        return _scopes == null ? NO_SCOPES : _scopes;
     }
 
     @Override
-    protected Optional<AuthenticatedUser> authenticate(String token) throws IOException, ServletException
+    protected TokenValidator createTokenValidator(Map<String, ?> initParams) throws UnavailableException
     {
-        Optional<OpaqueToken> maybeOpaqueToken = _opaqueTokenValidator.validate(token);
+        // Like in the OAuthJwtFilter, we'll reuse the config of this filter + the service locator to
+        // get a JsonReaderFactory
+        JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
+        IntrospectionClient introspectionClient = HttpClientProvider.provider()
+                .createIntrospectionClient(initParams);
+
+        return new OpaqueTokenValidator(introspectionClient, jsonReaderFactory);
+    }
+
+    @Override
+    protected Optional<AuthenticatedUser> authenticate(String token) throws ServletException
+    {
         AuthenticatedUser result = null;
 
-        if (maybeOpaqueToken.isPresent())
+        try
         {
-            OpaqueToken opaqueToken = maybeOpaqueToken.get();
-            
-            result = new AuthenticatedUser(opaqueToken.getSubject(), opaqueToken.getScope());
+            Optional<? extends TokenData> validationResult = _opaqueTokenValidator.validate(token);
+
+            if (validationResult.isPresent())
+            {
+                TokenData opaqueToken = validationResult.get();
+
+                result = AuthenticatedUser.from(validationResult.get());
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.fine(() -> String.format("Failed to validate incoming token due to: %s", e.getMessage()));
         }
 
         return Optional.ofNullable(result);

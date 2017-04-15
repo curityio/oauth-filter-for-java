@@ -16,26 +16,30 @@
 
 package se.curity.oauth.opaque;
 
+import se.curity.oauth.TokenData;
+
 import java.time.Instant;
 
-public class OpaqueToken implements Expirable
+public class OpaqueTokenData extends TokenData implements Expirable
 {
     private final Instant _expiresAt;
     private final String _scope;
     private final String _subject;
 
-    OpaqueToken(String subject, long expiresAt, String scope)
+    OpaqueTokenData(String subject, long expiresAt, String scope)
     {
         _subject = subject;
         _scope = scope;
         _expiresAt = Instant.ofEpochSecond(expiresAt);
     }
 
+    @Override
     public String getScope()
     {
         return _scope;
     }
 
+    @Override
     public String getSubject()
     {
         return _subject;

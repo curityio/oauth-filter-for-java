@@ -22,18 +22,21 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 
 public abstract class OAuthFilter implements Filter
 {
+    protected static final String[] NO_SCOPES = {};
     private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
 
     private static final String PRINCIPAL = "principal";
@@ -60,7 +63,7 @@ public abstract class OAuthFilter implements Filter
     {
         HttpServletResponse response = (HttpServletResponse)servletResponse;
         Optional<String> token = extractAccessTokenFromHeader(servletRequest);
-        String oauthHost = getOAuthHost();
+        String oauthHost = getOAuthServerRealm();
 
         if (!token.isPresent())
         {
@@ -113,11 +116,14 @@ public abstract class OAuthFilter implements Filter
     }
 
     /**
-     * Returns the hostname of the OAuth server. This is used when the filter returns
-     * 401 WWW-Authenticate to indicate the Token Realm
-     * @return The OAuth hostname as string
+     * Returns the realm of the OAuth server.
+     *
+     * <p>This is used when the filter returns 401, Access Denied, or 403, Forbiggen, with a WWW-Authenticate HTTP
+     * indicating to the client that authentication is required</p>
+     *
+     * @return The OAuth server's realm as string
      */
-    protected abstract String getOAuthHost() throws ServletException;
+    protected abstract String getOAuthServerRealm() throws ServletException;
 
     /**
      * Returns the configured scopes that are required to be present in a token for the
@@ -125,6 +131,8 @@ public abstract class OAuthFilter implements Filter
      * @return An array of required scopes, or an empty array if all scopes are allowed
      */
     protected abstract String[] getScopes() throws ServletException;
+
+    protected abstract TokenValidator createTokenValidator(Map<String, ?> initParams) throws UnavailableException;
 
     /**
      * This is the authenticate method of the filter, it will take the token as string input and

@@ -16,11 +16,12 @@
 
 package se.curity.oauth.jwt;
 
-import javax.json.JsonObject;
-import java.io.Closeable;
+import se.curity.oauth.TokenValidationException;
+import se.curity.oauth.TokenValidator;
+
 import java.util.Optional;
 
-public interface JwtValidator extends Closeable
+public interface JwtValidator extends TokenValidator
 {
     /**
      * The Jwt validator is a class that takes a JWT and makes sure the Signature is valid
@@ -28,8 +29,8 @@ public interface JwtValidator extends Closeable
      * @return the content of the token body if token signature is valid, otherwise null
      * @throws JwtValidationException
      */
-    JsonObject validate(String jwt) throws JwtValidationException;
-
+    Optional<JwtData> validate(String jwt) throws TokenValidationException;
+    
     /**
      * Validates both the signature and the content of the token
      * Returns a map with the contents if valid, and an empty Optional for invalid tokens
@@ -37,5 +38,5 @@ public interface JwtValidator extends Closeable
      * @return
      * @throws JwtValidationException
      */
-    Optional<JsonObject>  validateAll(String jwt,String audience, String issuer) throws JwtValidationException;
+    Optional<JwtData> validateAll(String jwt, String audience, String issuer) throws TokenValidationException;
 }

@@ -101,6 +101,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- test dependencies -->

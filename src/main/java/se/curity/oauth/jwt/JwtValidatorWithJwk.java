@@ -16,13 +16,11 @@
 
 package se.curity.oauth.jwt;
 
-import org.apache.http.client.HttpClient;
 import se.curity.oauth.JsonUtils;
+import se.curity.oauth.WebKeysClient;
 
-import javax.json.JsonObject;
 import javax.json.JsonReaderFactory;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -36,17 +34,17 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
 
     private final JwkManager _jwkManager;
 
-    public JwtValidatorWithJwk(URI webKeysURI, long minKidReloadTime, HttpClient httpClient)
+    public JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient)
     {
-        this(webKeysURI, minKidReloadTime, httpClient, JsonUtils.createDefaultReaderFactory());
+        this(minKidReloadTime, webKeysClient, JsonUtils.createDefaultReaderFactory());
     }
 
-    public JwtValidatorWithJwk(URI webKeysURI, long minKidReloadTime, HttpClient httpClient,
+    public JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient,
                                JsonReaderFactory jsonReaderFactory)
     {
         super(jsonReaderFactory);
         
-        _jwkManager = new JwkManager(webKeysURI, minKidReloadTime, httpClient, jsonReaderFactory);
+        _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
     }
 
     /**
@@ -57,7 +55,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
      * @throws IllegalArgumentException if alg or kid are not present in the JWT header.
      * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
      */
-    public JsonObject validate(String jwt) throws JwtValidationException
+    public Optional<JwtData> validate(String jwt) throws JwtValidationException
     {
         String[] jwtParts = jwt.split("\\.");
 
@@ -91,7 +89,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
                             signatureData,
                             getKeyFromModAndExp(maybeWebKey.get().getModulus(), maybeWebKey.get().getExponent())))
                     {
-                        return decodeJwtBody(body);
+                        return Optional.of(new JwtData(decodeJwtBody(body)));
                     }
                 }
             }
@@ -106,7 +104,7 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
                     jwtHeader.getAlgorithm()));
         }
 
-        return null;
+        return Optional.empty();
     }
 
     private Optional<JsonWebKey> getJsonWebKeyFor(String kid)

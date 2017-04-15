@@ -16,16 +16,10 @@
 
 package se.curity.oauth.opaque;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
+import se.curity.oauth.IntrospectionClient;
 import se.curity.oauth.JsonUtils;
+import se.curity.oauth.TokenValidationException;
+import se.curity.oauth.TokenValidator;
 
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -33,57 +27,53 @@ import javax.json.JsonReaderFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
-public class OpaqueTokenValidator implements Closeable
+public class OpaqueTokenValidator implements Closeable, TokenValidator
 {
-    private static final Logger _logger = Logger.getLogger(OpaqueTokenValidator.class.getName());
-    private static final String ACCEPT = "Accept";
-
-    private final URI _introspectionUri;
-    private final String _clientId;
-    private final String _clientSecret;
-    private final HttpClient _httpClient;
-    private final ExpirationBasedCache<String, OpaqueToken> _tokenCache;
+    private final IntrospectionClient _introspectionClient;
+    private final ExpirationBasedCache<String, OpaqueTokenData> _tokenCache;
     private final JsonReaderFactory _jsonReaderFactory;
 
-    public OpaqueTokenValidator(URI introspectionUri, String clientId, String clientSecret, HttpClient httpClient)
+    public OpaqueTokenValidator(IntrospectionClient introspectionClient)
     {
-        this(introspectionUri, clientId, clientSecret, httpClient, JsonUtils.createDefaultReaderFactory());
+        this(introspectionClient, JsonUtils.createDefaultReaderFactory());
     }
 
-    public OpaqueTokenValidator(URI introspectionUri, String clientId, String clientSecret, HttpClient httpClient,
-                                JsonReaderFactory jsonReaderFactory)
+    public OpaqueTokenValidator(IntrospectionClient introspectionClient, JsonReaderFactory jsonReaderFactory)
     {
-        _introspectionUri = introspectionUri;
-        _clientId = clientId;
-        _clientSecret = clientSecret;
-        _httpClient = httpClient;
+        _introspectionClient = introspectionClient;
         _tokenCache = new ExpirationBasedCache<>();
         _jsonReaderFactory = jsonReaderFactory;
     }
 
-    public Optional<OpaqueToken> validate(String token) throws IOException
+    public Optional<OpaqueTokenData> validate(String token) throws TokenValidationException
     {
-        Optional<OpaqueToken> cachedValue = _tokenCache.get(token);
+        Optional<OpaqueTokenData> cachedValue = _tokenCache.get(token);
 
         if (cachedValue != null)
         {
             return cachedValue;
         }
 
-        String introspectJson = introspect(token);
+        String introspectJson = null;
+
+        try
+        {
+            introspectJson = introspect(token);
+        }
+        catch (Exception e)
+        {
+            // TODO: Add logging
+            throw new TokenValidationException("Failed to introspect token", e);
+        }
+
         OAuthIntrospectResponse response = parseIntrospectResponse(introspectJson);
 
         if (response.getActive())
         {
-            OpaqueToken newToken = new OpaqueToken(response.getSubject(), response.getExpiration(),response.getScope());
+            OpaqueTokenData newToken = new OpaqueTokenData(response.getSubject(), response.getExpiration(), response.getScope());
 
             if (newToken.getExpiresAt().isAfter(Instant.now()))
             {
@@ -100,28 +90,7 @@ public class OpaqueTokenValidator implements Closeable
 
     protected String introspect(String token) throws IOException
     {
-        HttpPost post = new HttpPost(_introspectionUri);
-
-        post.setHeader(ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
-
-        List<NameValuePair> params = new ArrayList<>(3);
-
-        params.add(new BasicNameValuePair("token", token));
-        params.add(new BasicNameValuePair("client_id", _clientId));
-        params.add(new BasicNameValuePair("client_secret", _clientSecret));
-
-        post.setEntity(new UrlEncodedFormEntity(params));
-
-        HttpResponse response = _httpClient.execute(post);
-
-        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
-        {
-            _logger.severe(() -> "Got error from introspection server: " + response.getStatusLine().getStatusCode());
-
-            throw new IOException("Got error from introspection server: " + response.getStatusLine().getStatusCode());
-        }
-
-        return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+        return _introspectionClient.introspect(token);
     }
 
     private OAuthIntrospectResponse parseIntrospectResponse(String introspectJson)
@@ -136,11 +105,7 @@ public class OpaqueTokenValidator implements Closeable
     @Override
     public void close() throws IOException
     {
-        if (_httpClient instanceof Closeable)
-        {
-            ((Closeable) _httpClient).close();
-        }
-
+        _introspectionClient.close();
         _tokenCache.clear();
     }
 }

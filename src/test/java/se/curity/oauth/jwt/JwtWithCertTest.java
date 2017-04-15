@@ -81,10 +81,10 @@ public class JwtWithCertTest
 
         _logger.info("test token = {}", _testToken);
 
-        JsonObject validatedToken = validator.validate(_testToken);
+        Optional<JwtData> validatedToken = validator.validate(_testToken);
 
         assertNotNull(validatedToken);
-        assertTrue(!validatedToken.isEmpty());
+        assertTrue(validatedToken.isPresent());
     }
 
     @Test
@@ -92,16 +92,19 @@ public class JwtWithCertTest
     {
         JwtValidator validator = new JwtValidatorWithCert(prepareKeyMap());
 
-        Optional<JsonObject> result = validator.validateAll(_testToken, AUDIENCE, ISSUER);
+        Optional<JwtData> result = validator.validateAll(_testToken, AUDIENCE, ISSUER);
 
         _logger.info("test token = {}", _testToken);
 
         assertTrue(result.isPresent());
-        assertTrue(result.get().containsKey("sub"));
-        assertTrue(result.get().containsKey(EXTRA_CLAIM));
 
-        assertEquals(SUBJECT, ((JsonString) result.get().get("sub")).getString());
-        assertEquals(EXTRA_CLAIM_VALUE, ((JsonString) result.get().get(EXTRA_CLAIM)).getString());
+        JsonObject jsonObject = result.get().getJsonObject();
+
+        assertTrue(jsonObject.containsKey("sub"));
+        assertTrue(jsonObject.containsKey(EXTRA_CLAIM));
+
+        assertEquals(SUBJECT, ((JsonString) jsonObject.get("sub")).getString());
+        assertEquals(EXTRA_CLAIM_VALUE, ((JsonString) jsonObject.get(EXTRA_CLAIM)).getString());
     }
 
     /**

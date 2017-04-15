@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2016 Curity AB.
- * 
+ * Copyright (C) 2017 Curity AB.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,19 +14,11 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
+package se.curity.oauth;
 
-import se.curity.oauth.TokenValidationException;
-
-public class JwtValidationException extends TokenValidationException
+public abstract class TokenData
 {
-    public JwtValidationException(String msg)
-    {
-        super(msg);
-    }
+    public abstract String getSubject();
 
-    public JwtValidationException(String msg, Throwable t)
-    {
-        super(msg, t);
-    }
+    public abstract String getScope();
 }

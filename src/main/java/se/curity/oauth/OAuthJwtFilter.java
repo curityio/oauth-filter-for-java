@@ -16,19 +16,14 @@
 
 package se.curity.oauth;
 
-import org.apache.http.client.HttpClient;
-import se.curity.oauth.jwt.JwtValidator;
 import se.curity.oauth.jwt.JwtValidatorWithJwk;
 
-import javax.json.JsonObject;
 import javax.json.JsonReaderFactory;
 import javax.json.spi.JsonProvider;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -42,15 +37,13 @@ public class OAuthJwtFilter extends OAuthFilter
     private String[] _scopes = null;
     private long _minKidReloadTimeInSeconds = 3600;
 
-    private JwtValidator _jwtValidator = null;
-    private final HttpClient _httpClient = ExternalResourceLoader.getInstance().loadJwkHttpClient();
+    private TokenValidator _jwtValidator = null;
 
     private interface InitParams
     {
         String OAUTH_HOST = "oauthHost";
         String OAUTH_PORT = "oauthPort";
         String SCOPE = "scope";
-        String JSON_WEB_KEYS_PATH = "jsonWebKeysPath";
         String MIN_KID_RELOAD_TIME = "_minKidReloadTimeInSeconds";
     }
 
@@ -59,9 +52,6 @@ public class OAuthJwtFilter extends OAuthFilter
         Map<String, String> initParams = FilterHelper.initParamsMapFrom(filterConfig);
 
         _oauthHost = FilterHelper.getInitParamValue(InitParams.OAUTH_HOST, initParams);
-        int oauthPort = FilterHelper.getInitParamValue(InitParams.OAUTH_PORT, initParams, Integer::parseInt);
-
-        String webKeysPath = FilterHelper.getInitParamValue(InitParams.JSON_WEB_KEYS_PATH, initParams);
 
         String scope = FilterHelper.getInitParamValue(InitParams.SCOPE, initParams);
         _scopes = scope.split("\\s+");
@@ -75,25 +65,7 @@ public class OAuthJwtFilter extends OAuthFilter
         {
             if (_jwtValidator == null)
             {
-                try
-                {
-                    // Pass all of the filter's config to the ReaderFactory factory method. It'll ignore anything it doesn't
-                    // understand (per JSR 353). This way, clients can change the provider using the service locator and configure
-                    // the ReaderFactory using the filter's config.
-                    JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
-                    URI webKeysURI = new URI("https", null, _oauthHost, oauthPort, webKeysPath, null, null);
-
-                    _jwtValidator = new JwtValidatorWithJwk(
-                            webKeysURI,
-                            _minKidReloadTimeInSeconds,
-                            _httpClient, jsonReaderFactory);
-                }
-                catch (URISyntaxException e)
-                {
-                    _logger.log(Level.SEVERE, "Invalid parameters", e);
-
-                    throw new UnavailableException("Service is unavailable");
-                }
+                _jwtValidator = createTokenValidator(initParams);
                 
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
@@ -105,7 +77,7 @@ public class OAuthJwtFilter extends OAuthFilter
     }
 
     @Override
-    protected String getOAuthHost()
+    protected String getOAuthServerRealm()
     {
         if (_oauthHost == null)
         {
@@ -118,12 +90,19 @@ public class OAuthJwtFilter extends OAuthFilter
     @Override
     protected String[] getScopes() throws UnavailableException
     {
-        if (_scopes == null)
-        {
-            throw new UnavailableException("Filter not initialized");
-        }
+        return _scopes == null ? NO_SCOPES : _scopes;
+    }
 
-        return _scopes;
+    @Override
+    protected TokenValidator createTokenValidator(Map<String, ?> initParams) throws UnavailableException
+    {
+        // Pass all of the filter's config to the ReaderFactory factory method. It'll ignore anything it doesn't
+        // understand (per JSR 353). This way, clients can change the provider using the service locator and configure
+        // the ReaderFactory using the filter's config.
+        JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
+        WebKeysClient webKeysClient = HttpClientProvider.provider().createWebKeysClient(initParams);
+
+        return _jwtValidator = new JwtValidatorWithJwk(_minKidReloadTimeInSeconds, webKeysClient, jsonReaderFactory);
     }
 
     @Override
@@ -133,11 +112,11 @@ public class OAuthJwtFilter extends OAuthFilter
 
         try
         {
-            JsonObject validationResult = _jwtValidator.validate(token);
+            Optional<? extends TokenData> validationResult = _jwtValidator.validate(token);
 
-            if (!validationResult.isEmpty())
+            if (validationResult.isPresent())
             {
-                result = AuthenticatedUser.from(validationResult);
+                result = AuthenticatedUser.from(validationResult.get());
             }
         }
         catch (Exception e)

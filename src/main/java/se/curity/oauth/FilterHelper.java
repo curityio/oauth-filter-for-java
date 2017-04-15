@@ -47,7 +47,7 @@ final class FilterHelper
         return result;
     }
 
-    static String getInitParamValue(String name, Map<String, String> initParams) throws UnavailableException
+    static String getInitParamValue(String name, Map<String, ?> initParams) throws UnavailableException
     {
         Optional<String> value = getSingleValue(name, initParams);
 
@@ -61,13 +61,13 @@ final class FilterHelper
         }
     }
 
-    static <T> T getInitParamValue(String name, Map<String, String> initParams,
+    static <T> T getInitParamValue(String name, Map<String, ?> initParams,
                                    Function<String, T> converter) throws UnavailableException
     {
         return converter.apply(getInitParamValue(name, initParams));
     }
 
-    static <T> Optional<T> getOptionalInitParamValue(String name, Map<String, String> initParams,
+    static <T> Optional<T> getOptionalInitParamValue(String name, Map<String, ?> initParams,
                                                      Function<String, T> converter) throws UnavailableException
     {
         Optional<String> value = getSingleValue(name, initParams);
@@ -75,10 +75,10 @@ final class FilterHelper
         return value.flatMap(s -> Optional.ofNullable(converter.apply(s)));
     }
 
-    private static Optional<String> getSingleValue(String name, Map<String, String> initParams) throws
+    private static Optional<String> getSingleValue(String name, Map<String, ?> initParams) throws
             UnavailableException
     {
-        return Optional.ofNullable(initParams.get(name));
+        return Optional.ofNullable(initParams.get(name)).map(Object::toString);
     }
 
     private static String missingInitParamMessage(String paramName)

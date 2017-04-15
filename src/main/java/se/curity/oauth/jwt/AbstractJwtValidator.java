@@ -16,8 +16,8 @@
 
 package se.curity.oauth.jwt;
 
-import org.apache.commons.codec.binary.Base64;
 import se.curity.oauth.JsonUtils;
+import se.curity.oauth.TokenValidationException;
 
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -56,9 +57,9 @@ public abstract class AbstractJwtValidator implements JwtValidator
     }
 
     @Override
-    public Optional<JsonObject> validateAll(String jwt, String audience, String issuer) throws JwtValidationException
+    public Optional<JwtData> validateAll(String jwt, String audience, String issuer) throws TokenValidationException
     {
-        if (validate(jwt).isEmpty())
+        if (!validate(jwt).isPresent())
         {
             return Optional.empty();
         }
@@ -71,7 +72,6 @@ public abstract class AbstractJwtValidator implements JwtValidator
         }
 
         String body = jwtParts[1];
-        Base64 base64 = new Base64(true);
 
         JsonObject jsonObject = decodeJwtBody(body);
 
@@ -115,7 +115,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
             throw new JwtValidationException("Failed to extract data from Token");
         }
 
-        return Optional.of(jsonObject);
+        return Optional.of(new JwtData(jsonObject));
     }
 
     /**
@@ -187,7 +187,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
     {
         return _decodedJwtHeaderByEncodedHeader.computeIfAbsent(header, key ->
         {
-            Base64 base64 = new Base64(true);
+            Base64.Decoder base64 = Base64.getDecoder();
             String decodedHeader = new String(base64.decode(header), StandardCharsets.UTF_8);
             JsonReader jsonHeaderReader = _jsonReaderFactory.createReader(new StringReader(decodedHeader));
 
