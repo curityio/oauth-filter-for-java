@@ -16,13 +16,13 @@
 
 package se.curity.oauth;
 
-import com.google.common.collect.*;
-
 import javax.servlet.FilterConfig;
-import java.util.*;
+import javax.servlet.UnavailableException;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 // intentionally package-private
 final class FilterHelper
@@ -32,28 +32,22 @@ final class FilterHelper
         // no instantiation - static functions only
     }
 
-    static ImmutableMultimap<String, String> initParamsMapFrom(FilterConfig config)
+    static Map<String, String> initParamsMapFrom(FilterConfig config)
     {
-        Multimap<String, String> result = Multimaps.newListMultimap(
-                new LinkedHashMap<>(),
-                ArrayList::new);
-
-        Enumeration<?> names = config.getInitParameterNames();
+        Map<String, String> result = new LinkedHashMap<>();
+        Enumeration<String> names = config.getInitParameterNames();
 
         while (names.hasMoreElements())
         {
-            String name = names.nextElement().toString();
+            String name = names.nextElement();
 
-            if (config.getInitParameter(name) != null)
-            {
-                result.put(name, config.getInitParameter(name));
-            }
+            result.put(name, config.getInitParameter(name));
         }
 
-        return ImmutableMultimap.copyOf(result);
+        return result;
     }
 
-    static String getInitParamValue(String name, Multimap<String, String> initParams)
+    static String getInitParamValue(String name, Map<String, String> initParams) throws UnavailableException
     {
         Optional<String> value = getSingleValue(name, initParams);
 
@@ -63,34 +57,28 @@ final class FilterHelper
         }
         else
         {
-            throw new IllegalStateException(missingInitParamMessage(name));
+            throw new UnavailableException(missingInitParamMessage(name));
         }
     }
 
-    static <T> T getInitParamValue(String name, Multimap<String, String> initParams,
-                                   Function<String, T> converter)
+    static <T> T getInitParamValue(String name, Map<String, String> initParams,
+                                   Function<String, T> converter) throws UnavailableException
     {
         return converter.apply(getInitParamValue(name, initParams));
     }
 
-    static <T> Optional<T> getOptionalInitParamValue(String name, Multimap<String, String> initParams,
-                                                     Function<String, T> converter)
+    static <T> Optional<T> getOptionalInitParamValue(String name, Map<String, String> initParams,
+                                                     Function<String, T> converter) throws UnavailableException
     {
         Optional<String> value = getSingleValue(name, initParams);
 
         return value.flatMap(s -> Optional.ofNullable(converter.apply(s)));
     }
 
-    private static Optional<String> getSingleValue(String name, Multimap<String, String> initParams)
+    private static Optional<String> getSingleValue(String name, Map<String, String> initParams) throws
+            UnavailableException
     {
-        Collection<String> values = initParams.get(name);
-
-        if (values.size() > 1)
-        {
-            throw new IllegalStateException(String.format("More than one value for parameter [%s]", name));
-        }
-
-        return Optional.ofNullable(Iterables.getFirst(values, null));
+        return Optional.ofNullable(initParams.get(name));
     }
 
     private static String missingInitParamMessage(String paramName)

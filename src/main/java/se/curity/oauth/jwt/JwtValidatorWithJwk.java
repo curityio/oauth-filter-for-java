@@ -17,8 +17,10 @@
 package se.curity.oauth.jwt;
 
 import org.apache.http.client.HttpClient;
+import se.curity.oauth.JsonUtils;
 
 import javax.json.JsonObject;
+import javax.json.JsonReaderFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Base64;
@@ -36,7 +38,15 @@ public final class JwtValidatorWithJwk extends AbstractJwtValidator
 
     public JwtValidatorWithJwk(URI webKeysURI, long minKidReloadTime, HttpClient httpClient)
     {
-        _jwkManager = new JwkManager(webKeysURI, minKidReloadTime, httpClient);
+        this(webKeysURI, minKidReloadTime, httpClient, JsonUtils.createDefaultReaderFactory());
+    }
+
+    public JwtValidatorWithJwk(URI webKeysURI, long minKidReloadTime, HttpClient httpClient,
+                               JsonReaderFactory jsonReaderFactory)
+    {
+        super(jsonReaderFactory);
+        
+        _jwkManager = new JwkManager(webKeysURI, minKidReloadTime, httpClient, jsonReaderFactory);
     }
 
     /**

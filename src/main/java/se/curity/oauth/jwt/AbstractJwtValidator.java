@@ -18,11 +18,12 @@ package se.curity.oauth.jwt;
 
 import com.google.common.base.Charsets;
 import org.apache.commons.codec.binary.Base64;
+import se.curity.oauth.JsonUtils;
 
-import javax.json.Json;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonReaderFactory;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import java.io.IOException;
@@ -43,9 +44,21 @@ public abstract class AbstractJwtValidator implements JwtValidator
 {
     private static final Logger _logger = Logger.getLogger(AbstractJwtValidator.class.getName());
 
-    // Caches with object scope that will ensure that we only decode the same JWT parts once per the lifetime of this object
-    private Map<String, JsonObject> _decodedJwtBodyByEncodedBody = new HashMap<>(1);
-    private Map<String, JwtHeader> _decodedJwtHeaderByEncodedHeader = new HashMap<>(1);
+    // Caches with object scope that will ensure that we only decode the same JWT parts once per the lifetime of this
+    // object
+    private final Map<String, JsonObject> _decodedJwtBodyByEncodedBody = new HashMap<>(1);
+    private final Map<String, JwtHeader> _decodedJwtHeaderByEncodedHeader = new HashMap<>(1);
+    private final JsonReaderFactory _jsonReaderFactory;
+
+    public AbstractJwtValidator()
+    {
+        this(JsonUtils.createDefaultReaderFactory());
+    }
+
+    public AbstractJwtValidator(JsonReaderFactory jsonReaderFactory)
+    {
+        _jsonReaderFactory = jsonReaderFactory;
+    }
 
     @Override
     public Optional<JsonObject> validateAll(String jwt, String audience, String issuer) throws JwtValidationException
@@ -169,7 +182,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
         {
             // TODO: Switch to stream
             String decodedBody = new String(java.util.Base64.getUrlDecoder().decode(body), Charsets.UTF_8);
-            JsonReader jsonBodyReader = Json.createReader(new StringReader(decodedBody));
+            JsonReader jsonBodyReader = _jsonReaderFactory.createReader(new StringReader(decodedBody));
 
             return jsonBodyReader.readObject();
         });
@@ -181,7 +194,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
         {
             Base64 base64 = new Base64(true);
             String decodedHeader = new String(base64.decode(header), Charsets.UTF_8);
-            JsonReader jsonHeaderReader = Json.createReader(new StringReader(decodedHeader));
+            JsonReader jsonHeaderReader = _jsonReaderFactory.createReader(new StringReader(decodedHeader));
 
             return new JwtHeader(jsonHeaderReader.readObject());
         });

@@ -16,19 +16,21 @@
 
 package se.curity.oauth;
 
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.io.Closeables;
 import org.apache.http.client.HttpClient;
 import se.curity.oauth.jwt.JwtValidator;
 import se.curity.oauth.jwt.JwtValidatorWithJwk;
 
 import javax.json.JsonObject;
+import javax.json.JsonReaderFactory;
+import javax.json.spi.JsonProvider;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,7 +57,7 @@ public class OAuthJwtFilter extends OAuthFilter
 
     public void init(FilterConfig filterConfig) throws ServletException
     {
-        ImmutableMultimap<String, String> initParams = FilterHelper.initParamsMapFrom(filterConfig);
+        Map<String, String> initParams = FilterHelper.initParamsMapFrom(filterConfig);
 
         _oauthHost = FilterHelper.getInitParamValue(InitParams.OAUTH_HOST, initParams);
         int oauthPort = FilterHelper.getInitParamValue(InitParams.OAUTH_PORT, initParams, Integer::parseInt);
@@ -76,11 +78,16 @@ public class OAuthJwtFilter extends OAuthFilter
             {
                 try
                 {
+                    // Pass all of the filter's config to the ReaderFactory factory method. It'll ignore anything it doesn't
+                    // understand (per JSR 353). This way, clients can change the provider using the service locator and configure
+                    // the ReaderFactory using the filter's config.
+                    JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
                     URI webKeysURI = new URI("https", null, _oauthHost, oauthPort, webKeysPath, null, null);
+
                     _jwtValidator = new JwtValidatorWithJwk(
                             webKeysURI,
                             _minKidReloadTimeInSeconds,
-                            _httpClient);
+                            _httpClient, jsonReaderFactory);
                 }
                 catch (URISyntaxException e)
                 {
@@ -88,6 +95,7 @@ public class OAuthJwtFilter extends OAuthFilter
 
                     throw new UnavailableException("Service is unavailable");
                 }
+                
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
             else

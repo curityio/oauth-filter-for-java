@@ -16,18 +16,20 @@
 
 package se.curity.oauth;
 
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.io.Closeables;
 import org.apache.http.client.HttpClient;
 import se.curity.oauth.opaque.OpaqueToken;
 import se.curity.oauth.opaque.OpaqueTokenValidator;
 
+import javax.json.JsonReaderFactory;
+import javax.json.spi.JsonProvider;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,7 +60,7 @@ public class OAuthOpaqueFilter extends OAuthFilter
 
     public void init(FilterConfig filterConfig) throws ServletException
     {
-        ImmutableMultimap<String, String> initParams = initParamsMapFrom(filterConfig);
+        Map<String, String> initParams = initParamsMapFrom(filterConfig);
 
         _oauthHost = getInitParamValue(InitParams.OAUTH_HOST, initParams);
         int oauthPort = getInitParamValue(InitParams.OAUTH_PORT, initParams, Integer::parseInt);
@@ -66,8 +68,8 @@ public class OAuthOpaqueFilter extends OAuthFilter
         String introspectionPath = getInitParamValue(InitParams.INTROSPECTION_PATH, initParams);
         String clientId = getInitParamValue(InitParams.CLIENT_ID, initParams);
         String clientSecret = getInitParamValue(InitParams.CLIENT_SECRET, initParams);
-
         String scope = getInitParamValue(InitParams.SCOPE, initParams);
+
         _scopes = scope.split("\\s+");
 
         synchronized (this)
@@ -76,9 +78,13 @@ public class OAuthOpaqueFilter extends OAuthFilter
             {
                 try
                 {
+                    // Like in the OAuthJwtFilter, we'll reuse the config of this filter + the service locator to
+                    // get a JsonReaderFactory
+                    JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
                     URI introspectionUri = new URI("https", null, _oauthHost, oauthPort, introspectionPath, null, null);
-                    _opaqueTokenValidator = new OpaqueTokenValidator(introspectionUri, clientId, clientSecret, _httpClient);
 
+                    _opaqueTokenValidator = new OpaqueTokenValidator(introspectionUri, clientId, clientSecret,
+                            _httpClient, jsonReaderFactory);
                 }
                 catch (URISyntaxException e)
                 {
@@ -86,6 +92,7 @@ public class OAuthOpaqueFilter extends OAuthFilter
 
                     throw new UnavailableException("Service is unavailable");
                 }
+
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
             else

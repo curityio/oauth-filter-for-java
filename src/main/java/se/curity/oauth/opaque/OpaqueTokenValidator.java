@@ -27,10 +27,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import se.curity.oauth.JsonUtils;
 
-import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonReaderFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
@@ -49,16 +50,23 @@ public class OpaqueTokenValidator implements Closeable
     private final String _clientId;
     private final String _clientSecret;
     private final HttpClient _httpClient;
-
     private final ExpirationBasedCache<String, OpaqueToken> _tokenCache;
+    private final JsonReaderFactory _jsonReaderFactory;
 
     public OpaqueTokenValidator(URI introspectionUri, String clientId, String clientSecret, HttpClient httpClient)
+    {
+        this(introspectionUri, clientId, clientSecret, httpClient, JsonUtils.createDefaultReaderFactory());
+    }
+
+    public OpaqueTokenValidator(URI introspectionUri, String clientId, String clientSecret, HttpClient httpClient,
+                                JsonReaderFactory jsonReaderFactory)
     {
         _introspectionUri = introspectionUri;
         _clientId = clientId;
         _clientSecret = clientSecret;
         _httpClient = httpClient;
         _tokenCache = new ExpirationBasedCache<>();
+        _jsonReaderFactory = jsonReaderFactory;
     }
 
     public Optional<OpaqueToken> validate(String token) throws IOException
@@ -118,7 +126,7 @@ public class OpaqueTokenValidator implements Closeable
 
     private OAuthIntrospectResponse parseIntrospectResponse(String introspectJson)
     {
-        JsonReader jsonReader = Json.createReader(new StringReader(introspectJson));
+        JsonReader jsonReader = _jsonReaderFactory.createReader(new StringReader(introspectJson));
         JsonObject jsonObject = jsonReader.readObject();
 
         return new OAuthIntrospectResponse(jsonObject.getBoolean("active"), jsonObject.getString("sub"),

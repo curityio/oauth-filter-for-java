@@ -25,10 +25,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
+import se.curity.oauth.JsonUtils;
 
-import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonReaderFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
@@ -51,13 +52,19 @@ final class JwkManager implements Closeable
     private final TimeBasedCache<String, JsonWebKey> _jsonWebKeyByKID;
     private final HttpClient _httpClient;
     private final ScheduledExecutorService _executor = Executors.newSingleThreadScheduledExecutor();
+    private final JsonReaderFactory _jsonReaderFactory;
 
     JwkManager(URI jwksUri, long minKidReloadTimeInSeconds, HttpClient httpClient)
     {
+        this(jwksUri, minKidReloadTimeInSeconds, httpClient, JsonUtils.createDefaultReaderFactory());
+    }
+
+    JwkManager(URI jwksUri, long minKidReloadTimeInSeconds, HttpClient httpClient, JsonReaderFactory jsonReaderFactory)
+    {
         _jwksUri = jwksUri;
-        _jsonWebKeyByKID = new TimeBasedCache<>(
-                Duration.ofSeconds(minKidReloadTimeInSeconds), this::reload);
+        _jsonWebKeyByKID = new TimeBasedCache<>(Duration.ofSeconds(minKidReloadTimeInSeconds), this::reload);
         _httpClient = httpClient;
+        _jsonReaderFactory = jsonReaderFactory;
 
         // invalidate the cache periodically to avoid stale state
         _executor.scheduleAtFixedRate(this::ensureCacheIsFresh, 5, 15, TimeUnit.MINUTES);
@@ -127,7 +134,7 @@ final class JwkManager implements Closeable
 
     private JwksResponse parseJwksResponse(String response)
     {
-        JsonReader jsonReader = Json.createReader(new StringReader(response));
+        JsonReader jsonReader = _jsonReaderFactory.createReader(new StringReader(response));
         JsonObject jsonObject = jsonReader.readObject();
 
         return new JwksResponse(jsonObject);
