@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 import static se.curity.oauth.FilterHelper.getInitParamValue;
 
-public class DefaultHttpClientProvider extends HttpClientProvider
+class DefaultHttpClientProvider extends HttpClientProvider
 {
     private static final Logger _logger = Logger.getLogger(OAuthOpaqueFilter.class.getName());
 

@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
 
-public class DefaultIntrospectClient implements IntrospectionClient
+class DefaultIntrospectClient implements IntrospectionClient
 {
     private static final Logger _logger = Logger.getLogger(DefaultIntrospectClient.class.getName());
 

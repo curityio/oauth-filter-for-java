@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
 
-public class DefaultWebKeysClient implements WebKeysClient
+class DefaultWebKeysClient implements WebKeysClient
 {
     private static final Logger _logger = Logger.getLogger(DefaultWebKeysClient.class.getName());
     private final URI _jwksUri;
