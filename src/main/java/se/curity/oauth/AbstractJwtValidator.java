@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
-
-import se.curity.oauth.JsonUtils;
-import se.curity.oauth.TokenValidationException;
+package se.curity.oauth;
 
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -36,7 +33,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class AbstractJwtValidator implements JwtValidator
+abstract class AbstractJwtValidator implements JwtValidator
 {
     private static final Logger _logger = Logger.getLogger(AbstractJwtValidator.class.getName());
 
@@ -46,12 +43,7 @@ public abstract class AbstractJwtValidator implements JwtValidator
     private final Map<String, JwtHeader> _decodedJwtHeaderByEncodedHeader = new HashMap<>(1);
     private final JsonReaderFactory _jsonReaderFactory;
 
-    public AbstractJwtValidator()
-    {
-        this(JsonUtils.createDefaultReaderFactory());
-    }
-
-    public AbstractJwtValidator(JsonReaderFactory jsonReaderFactory)
+    AbstractJwtValidator(JsonReaderFactory jsonReaderFactory)
     {
         _jsonReaderFactory = jsonReaderFactory;
     }

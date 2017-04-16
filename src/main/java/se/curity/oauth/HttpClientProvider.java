@@ -23,11 +23,11 @@ import java.util.ServiceLoader;
 
 public abstract class HttpClientProvider
 {
-    protected HttpClientProvider()
+    HttpClientProvider()
     {
     }
 
-    public static HttpClientProvider provider()
+    static HttpClientProvider provider()
     {
         ServiceLoader<HttpClientProvider> loader = ServiceLoader.load(HttpClientProvider.class);
         Iterator<HttpClientProvider> it = loader.iterator();

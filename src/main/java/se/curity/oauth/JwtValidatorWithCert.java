@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
+package se.curity.oauth;
 
-import se.curity.oauth.JsonUtils;
-
-import javax.json.JsonReaderFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-public class JwtValidatorWithCert extends AbstractJwtValidator
+final class JwtValidatorWithCert extends AbstractJwtValidator
 {
     private static final Logger _logger = Logger.getLogger(JwtValidatorWithCert.class.getName());
 
@@ -33,12 +30,7 @@ public class JwtValidatorWithCert extends AbstractJwtValidator
 
     JwtValidatorWithCert(Map<String,RSAPublicKey> publicKeys)
     {
-        this(publicKeys, JsonUtils.createDefaultReaderFactory());
-    }
-
-    JwtValidatorWithCert(Map<String,RSAPublicKey> publicKeys, JsonReaderFactory jsonReaderFactory)
-    {
-        super(jsonReaderFactory);
+        super(JsonUtils.createDefaultReaderFactory());
         
         _keys = publicKeys;
     }

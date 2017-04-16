@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.opaque;
-
-import se.curity.oauth.TokenData;
+package se.curity.oauth;
 
 import java.time.Instant;
 
-public class OpaqueTokenData extends TokenData implements Expirable
+class OpaqueTokenData extends TokenData implements Expirable
 {
     private final Instant _expiresAt;
     private final String _scope;

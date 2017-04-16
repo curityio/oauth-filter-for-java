@@ -45,7 +45,7 @@ class DefaultIntrospectClient implements IntrospectionClient
     private final String _clientId;
     private final String _clientSecret;
 
-    public DefaultIntrospectClient(URI introspectionUri, String clientId, String clientSecret, HttpClient httpClient)
+    DefaultIntrospectClient(URI introspectionUri, String clientId, String clientSecret, HttpClient httpClient)
     {
         _introspectionUri = introspectionUri;
         _clientId = clientId;

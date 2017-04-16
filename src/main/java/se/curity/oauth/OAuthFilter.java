@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 
 public abstract class OAuthFilter implements Filter
 {
-    protected static final String[] NO_SCOPES = {};
+    static final String[] NO_SCOPES = {};
     private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
 
     private static final String PRINCIPAL = "principal";

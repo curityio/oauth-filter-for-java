@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
-
-import se.curity.oauth.JsonUtils;
-import se.curity.oauth.WebKeysClient;
+package se.curity.oauth;
 
 import javax.json.JsonReaderFactory;
 import java.io.IOException;
@@ -28,21 +25,15 @@ import java.util.logging.Logger;
 /**
  * A validator class that does not depend on any external libraries
  */
-public final class JwtValidatorWithJwk extends AbstractJwtValidator
+final class JwtValidatorWithJwk extends AbstractJwtValidator
 {
     private static final Logger _logger = Logger.getLogger(JwtValidatorWithJwk.class.getName());
 
     private final JwkManager _jwkManager;
 
-    public JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient)
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, JsonReaderFactory jsonReaderFactory)
     {
-        this(minKidReloadTime, webKeysClient, JsonUtils.createDefaultReaderFactory());
-    }
-
-    public JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient,
-                               JsonReaderFactory jsonReaderFactory)
-    {
-        super(jsonReaderFactory);
+        super(JsonUtils.createDefaultReaderFactory());
         
         _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
     }

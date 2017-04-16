@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
-
-import se.curity.oauth.JsonUtils;
-import se.curity.oauth.WebKeysClient;
+package se.curity.oauth;
 
 import javax.json.JsonObject;
 import javax.json.JsonReader;

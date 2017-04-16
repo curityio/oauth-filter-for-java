@@ -25,18 +25,18 @@ import javax.json.spi.JsonProvider;
 import java.util.Collections;
 import java.util.Optional;
 
-public final class JsonUtils
+final class JsonUtils
 {
     private JsonUtils()
     {
     }
 
-    public static JsonReaderFactory createDefaultReaderFactory()
+    static JsonReaderFactory createDefaultReaderFactory()
     {
         return JsonProvider.provider().createReaderFactory(Collections.emptyMap());
     }
 
-    public static String getString(JsonObject jsonObject, String name)
+    static String getString(JsonObject jsonObject, String name)
     {
         return Optional.ofNullable(jsonObject.get(name))
                 .filter(it -> it.getValueType() == JsonValue.ValueType.STRING)
@@ -44,7 +44,7 @@ public final class JsonUtils
                 .orElse(null);
     }
 
-    public static long getLong(JsonObject jsonObject, String name)
+    static long getLong(JsonObject jsonObject, String name)
     {
         return Optional.ofNullable(jsonObject.get(name))
                 .filter(it -> it.getValueType() == JsonValue.ValueType.NUMBER)

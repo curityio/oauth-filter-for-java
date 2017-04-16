@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.opaque;
-
-import se.curity.oauth.IntrospectionClient;
-import se.curity.oauth.JsonUtils;
-import se.curity.oauth.TokenValidationException;
-import se.curity.oauth.TokenValidator;
+package se.curity.oauth;
 
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -41,14 +36,14 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
         this(introspectionClient, JsonUtils.createDefaultReaderFactory());
     }
 
-    public OpaqueTokenValidator(IntrospectionClient introspectionClient, JsonReaderFactory jsonReaderFactory)
+    OpaqueTokenValidator(IntrospectionClient introspectionClient, JsonReaderFactory jsonReaderFactory)
     {
         _introspectionClient = introspectionClient;
         _tokenCache = new ExpirationBasedCache<>();
         _jsonReaderFactory = jsonReaderFactory;
     }
 
-    public Optional<OpaqueTokenData> validate(String token) throws TokenValidationException
+    public Optional<? extends TokenData> validate(String token) throws TokenValidationException
     {
         Optional<OpaqueTokenData> cachedValue = _tokenCache.get(token);
 
@@ -61,7 +56,7 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
 
         try
         {
-            introspectJson = introspect(token);
+            introspectJson = _introspectionClient.introspect(token);
         }
         catch (Exception e)
         {
@@ -86,11 +81,6 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
         }
 
         return Optional.empty();
-    }
-
-    protected String introspect(String token) throws IOException
-    {
-        return _introspectionClient.introspect(token);
     }
 
     private OAuthIntrospectResponse parseIntrospectResponse(String introspectJson)

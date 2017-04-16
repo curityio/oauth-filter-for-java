@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.opaque;
+package se.curity.oauth;
 
-import java.time.Instant;
+import java.io.IOException;
 
-public interface Expirable
+class JsonWebKeyNotFoundException extends IOException
 {
-    Instant getExpiresAt();
+    JsonWebKeyNotFoundException(String msg)
+    {
+        super(msg);
+    }
 }

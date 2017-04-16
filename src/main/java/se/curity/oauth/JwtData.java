@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
-
-import se.curity.oauth.JsonUtils;
-import se.curity.oauth.TokenData;
-import se.curity.oauth.opaque.Expirable;
+package se.curity.oauth;
 
 import javax.json.JsonObject;
 import java.time.Instant;
@@ -27,7 +23,7 @@ public class JwtData extends TokenData implements Expirable
 {
     private final JsonObject _jsonObject;
 
-    public JwtData(JsonObject jsonObject)
+    JwtData(JsonObject jsonObject)
     {
         _jsonObject = jsonObject;
     }

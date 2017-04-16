@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.opaque;
+package se.curity.oauth;
 
 class OAuthIntrospectResponse
 {

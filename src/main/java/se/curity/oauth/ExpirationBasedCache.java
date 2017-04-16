@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.opaque;
+package se.curity.oauth;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -62,7 +62,7 @@ public class ExpirationBasedCache<K, V extends Expirable>
         return Optional.ofNullable(value);
     }
 
-    public void put(K key, V value)
+    void put(K key, V value)
     {
         _cache.putIfAbsent(key, value);
     }

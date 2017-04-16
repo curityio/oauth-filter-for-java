@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
+package se.curity.oauth;
 
 import org.junit.Test;
 

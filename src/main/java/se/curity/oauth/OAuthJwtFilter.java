@@ -16,8 +16,6 @@
 
 package se.curity.oauth;
 
-import se.curity.oauth.jwt.JwtValidatorWithJwk;
-
 import javax.json.JsonReaderFactory;
 import javax.json.spi.JsonProvider;
 import javax.servlet.FilterConfig;

@@ -36,7 +36,7 @@ class DefaultWebKeysClient implements WebKeysClient
     private final URI _jwksUri;
     private final HttpClient _httpClient;
 
-    public DefaultWebKeysClient(URI jwksUri, HttpClient httpClient)
+    DefaultWebKeysClient(URI jwksUri, HttpClient httpClient)
     {
         _jwksUri = jwksUri;
         _httpClient = httpClient;

@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-// intentionally package-private
 final class FilterHelper
 {
     private FilterHelper()

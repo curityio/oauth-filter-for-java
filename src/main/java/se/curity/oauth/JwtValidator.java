@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
-
-import se.curity.oauth.TokenValidationException;
-import se.curity.oauth.TokenValidator;
+package se.curity.oauth;
 
 import java.util.Optional;
 

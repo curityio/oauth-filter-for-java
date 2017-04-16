@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package se.curity.oauth.jwt;
+package se.curity.oauth;
 
-import se.curity.oauth.TokenValidationException;
-
-public class JwtValidationException extends TokenValidationException
+class JwtValidationException extends TokenValidationException
 {
-    public JwtValidationException(String msg)
+    JwtValidationException(String msg)
     {
         super(msg);
     }
 
-    public JwtValidationException(String msg, Throwable t)
+    JwtValidationException(String msg, Throwable t)
     {
         super(msg, t);
     }

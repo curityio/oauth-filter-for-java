@@ -24,7 +24,7 @@ public class AuthenticatedUser
     private final String _sub;
     private final String _scope;
 
-    AuthenticatedUser(String subject, String scope)
+    private AuthenticatedUser(String subject, String scope)
     {
         _sub = subject;
         _scope = scope;
