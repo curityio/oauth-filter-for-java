@@ -122,11 +122,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.aggregate</groupId>
-            <artifactId>jetty-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <scope>test</scope>
@@ -174,11 +169,6 @@
                 <groupId>com.owlike</groupId>
                 <artifactId>genson</artifactId>
                 <version>1.4</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.aggregate</groupId>
-                <artifactId>jetty-all</artifactId>
-                <version>9.2.7.v20150116</version>
             </dependency>
             <dependency>
                 <groupId>org.bitbucket.b_c</groupId>
