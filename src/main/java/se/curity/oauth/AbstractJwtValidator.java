@@ -19,7 +19,6 @@ package se.curity.oauth;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
-import java.io.IOException;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -193,12 +192,6 @@ abstract class AbstractJwtValidator implements JwtValidator
     private boolean canRecognizeAlg(String alg)
     {
         return alg.equals("RS256");
-    }
-
-    @Override
-    public void close() throws IOException
-    {
-
     }
 
     private JsonObject decodeJwtBody(String body)
