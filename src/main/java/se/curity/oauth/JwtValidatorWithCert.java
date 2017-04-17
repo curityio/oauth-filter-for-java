@@ -16,8 +16,8 @@
 
 package se.curity.oauth;
 
+import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -28,73 +28,16 @@ final class JwtValidatorWithCert extends AbstractJwtValidator
 
     private final Map<String, RSAPublicKey> _keys;
 
-    JwtValidatorWithCert(Map<String,RSAPublicKey> publicKeys)
+    JwtValidatorWithCert(String issuer, String audience, Map<String, RSAPublicKey> publicKeys)
     {
-        super(JsonUtils.createDefaultReaderFactory());
+        super(issuer, audience, JsonUtils.createDefaultReaderFactory());
         
         _keys = publicKeys;
     }
 
-    /**
-     * JWT: abads.gfdr.htefgy
-     *
-     * @param jwt the original base64 encoded JWT
-     * @return True if the JWT is valid
-     * @throws IllegalArgumentException if alg or kid are not present in the JWT header.
-     * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
-     */
     @Override
-    public Optional<JwtData> validate(String jwt)
+    protected Optional<PublicKey> getPublicKey(JwtHeader jwtHeader)
     {
-        String[] jwtParts = jwt.split("\\.");
-
-        if (jwtParts.length != 3)
-        {
-            throw new IllegalArgumentException("Incorrect JWT input");
-        }
-
-        String header = jwtParts[0];
-        String body = jwtParts[1];
-        JwtHeader jwtHeader = decodeJwtHeader(header);
-
-        String alg = jwtHeader.getAlgorithm();
-
-        assert alg != null && alg.length() > 0 : "alg is not present in JWT";
-
-        if (canRecognizeAlg(alg))
-        {
-            String x5t256 = jwtHeader.getString("x5t#S256");
-            Optional<RSAPublicKey> maybeWebKey = getJsonWebKeyForCertThumbprint(x5t256);
-
-            if (maybeWebKey.isPresent())
-            {
-                byte[] signatureData = Base64.getUrlDecoder().decode(jwtParts[2]);
-                byte[] headerAndPayload = convertToBytes(header + "." + jwtParts[1]);
-
-                if (validateSignature(headerAndPayload, signatureData, maybeWebKey.get()))
-                {
-                    return Optional.of(new JwtData(decodeJwtBody(body)));
-                }
-            }
-
-            _logger.warning("Received token but could not find matching key");
-        }
-        else
-        {
-            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s",
-                    jwtHeader.getAlgorithm()));
-        }
-
-        return Optional.empty();
-    }
-
-    private boolean canRecognizeAlg(String alg)
-    {
-        return alg.equals("RS256");
-    }
-
-    private Optional<RSAPublicKey> getJsonWebKeyForCertThumbprint(String x5t256)
-    {
-        return Optional.ofNullable(_keys.get(x5t256));
+        return Optional.ofNullable(_keys.get(jwtHeader.getString("x5t#S256")));
     }
 }

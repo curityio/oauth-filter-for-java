@@ -16,24 +16,13 @@
 
 package se.curity.oauth;
 
-import java.util.Optional;
-
-public interface JwtValidator extends TokenValidator
+interface JwtValidator extends TokenValidator
 {
     /**
      * The Jwt validator is a class that takes a JWT and makes sure the Signature is valid
-     * @param jwt
+     * @param jwt the JWT to be validated
      * @return the content of the token body if token signature is valid, otherwise null
-     * @throws JwtValidationException
+     * @throws TokenValidationException
      */
-    Optional<JwtData> validate(String jwt) throws TokenValidationException;
-    
-    /**
-     * Validates both the signature and the content of the token
-     * Returns a map with the contents if valid, and an empty Optional for invalid tokens
-     * @param jwt
-     * @return
-     * @throws JwtValidationException
-     */
-    Optional<JwtData> validateAll(String jwt, String audience, String issuer) throws TokenValidationException;
+    JwtData validate(String jwt) throws TokenValidationException;
 }

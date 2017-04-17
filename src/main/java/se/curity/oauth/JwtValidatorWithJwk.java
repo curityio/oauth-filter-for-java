@@ -18,104 +18,53 @@ package se.curity.oauth;
 
 import javax.json.JsonReaderFactory;
 import java.io.IOException;
-import java.util.Base64;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * A validator class that does not depend on any external libraries
- */
 final class JwtValidatorWithJwk extends AbstractJwtValidator
 {
     private static final Logger _logger = Logger.getLogger(JwtValidatorWithJwk.class.getName());
 
     private final JwkManager _jwkManager;
 
-    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, JsonReaderFactory jsonReaderFactory)
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, String audience, String issuer,
+                        JsonReaderFactory jsonReaderFactory)
     {
-        super(JsonUtils.createDefaultReaderFactory());
+        super(issuer, audience, JsonUtils.createDefaultReaderFactory());
         
         _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
     }
 
-    /**
-     * JWT: abads.gfdr.htefgy
-     *
-     * @param jwt the original base64 encoded JWT
-     * @return A map with the content of the Jwt body if the JWT is valid, otherwise null
-     * @throws IllegalArgumentException if alg or kid are not present in the JWT header.
-     * @throws RuntimeException         if some environment issue makes it impossible to validate a signature
-     */
-    public Optional<JwtData> validate(String jwt) throws JwtValidationException
+    @Override
+    protected Optional<PublicKey> getPublicKey(JwtHeader jwtHeader)
     {
-        String[] jwtParts = jwt.split("\\.");
+        Optional<PublicKey> result = Optional.empty();
 
-        if (jwtParts.length != 3)
-        {
-            throw new IllegalArgumentException("Incorrect JWT input");
-        }
-
-        String header = jwtParts[0];
-        String body = jwtParts[1];
-        JwtHeader jwtHeader = decodeJwtHeader(header);
-
-        String alg = jwtHeader.getAlgorithm();
-        String kid = jwtHeader.getKeyId();
-
-        assert alg != null && alg.length() > 0 : "Alg is not present in JWT";
-        assert kid != null && kid.length() > 0 : "Key ID is not present in JWT";
-
-        if (canRecognizeAlg(alg))
-        {
-            try
-            {
-                Optional<JsonWebKey> maybeWebKey = getJsonWebKeyFor(kid);
-
-                if (maybeWebKey.isPresent())
-                {
-                    byte[] signatureData = Base64.getUrlDecoder().decode(jwtParts[2]);
-                    byte[] headerAndPayload = convertToBytes(header + "." + jwtParts[1]);
-
-                    if(validateSignature(headerAndPayload,
-                            signatureData,
-                            getKeyFromModAndExp(maybeWebKey.get().getModulus(), maybeWebKey.get().getExponent())))
-                    {
-                        return Optional.of(new JwtData(decodeJwtBody(body)));
-                    }
-                }
-            }
-            catch(Exception e)
-            {
-                throw new JwtValidationException("Unable to validate Jwt ", e);
-            }
-        }
-        else
-        {
-            _logger.info(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s",
-                    jwtHeader.getAlgorithm()));
-        }
-
-        return Optional.empty();
-    }
-
-    private Optional<JsonWebKey> getJsonWebKeyFor(String kid)
-    {
         try
         {
-            return Optional.ofNullable(_jwkManager.getJsonWebKeyForKeyId(kid));
+            JsonWebKey jsonWebKeyType = _jwkManager.getJsonWebKeyForKeyId(jwtHeader.getKeyId());
+
+            if (jsonWebKeyType != null)
+            {
+                result = Optional.of(RsaPublicKeyCreator.createPublicKey(jsonWebKeyType.getModulus(),
+                        jsonWebKeyType.getExponent()));
+            }
         }
         catch (JsonWebKeyNotFoundException e)
         {
             // this is not a very exceptional occurrence, so let's not log a stack-trace
             _logger.info(() -> String.format("Could not find requested JsonWebKey: %s", e));
-
-            return Optional.empty();
         }
-    }
+        catch (NoSuchAlgorithmException | InvalidKeySpecException e)
+        {
+            _logger.log(Level.WARNING, "Could not create public key", e);
+        }
 
-    private boolean canRecognizeAlg(String alg)
-    {
-        return alg.equals("RS256");
+        return result;
     }
 
     @Override

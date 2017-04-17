@@ -43,16 +43,16 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
         _jsonReaderFactory = jsonReaderFactory;
     }
 
-    public Optional<? extends TokenData> validate(String token) throws TokenValidationException
+    public TokenData validate(String token) throws TokenValidationException
     {
         Optional<OpaqueTokenData> cachedValue = _tokenCache.get(token);
 
-        if (cachedValue != null)
+        if (cachedValue.isPresent())
         {
-            return cachedValue;
+            return cachedValue.get();
         }
 
-        String introspectJson = null;
+        String introspectJson;
 
         try
         {
@@ -68,7 +68,8 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
 
         if (response.getActive())
         {
-            OpaqueTokenData newToken = new OpaqueTokenData(response.getSubject(), response.getExpiration(), response.getScope());
+            OpaqueTokenData newToken = new OpaqueTokenData(response.getSubject(), response.getExpiration(),
+                    response.getScope());
 
             if (newToken.getExpiresAt().isAfter(Instant.now()))
             {
@@ -76,11 +77,17 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
                 //      in clear text
                 _tokenCache.put(token, newToken);
 
-                return Optional.of(newToken);
+                return newToken;
+            }
+            else
+            {
+                throw new ExpiredTokenException();
             }
         }
-
-        return Optional.empty();
+        else
+        {
+            throw new RevokedTokenException();
+        }
     }
 
     private OAuthIntrospectResponse parseIntrospectResponse(String introspectJson)

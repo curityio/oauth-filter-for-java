@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public abstract class OAuthFilter implements Filter
@@ -83,7 +84,7 @@ public abstract class OAuthFilter implements Filter
 
         AuthenticatedUser authenticatedUser = maybeAuthenticatedUser.get();
 
-        if (!authorize(authenticatedUser.getScope().orElse(null)))
+        if (!isAuthorized(authenticatedUser.getScope().orElse(null)))
         {
             //403 Forbidden Scope header
             setForbidden403(response, oauthHost);
@@ -134,16 +135,32 @@ public abstract class OAuthFilter implements Filter
 
     protected abstract TokenValidator createTokenValidator(Map<String, ?> initParams) throws UnavailableException;
 
+    protected abstract TokenValidator getTokenValidator();
+
     /**
      * This is the authenticate method of the filter, it will take the token as string input and
      * must perform the appropriate operation to validate the token.
      * @param token - The token extracted from the Authorization header and stripped of the Bearer
      * @return An AuthenticatedUser if the token was valid, or null if not.
-     * @throws IOException
      * @throws ServletException
      */
-    protected abstract Optional<AuthenticatedUser> authenticate(String token) throws IOException, ServletException;
+    protected Optional<AuthenticatedUser> authenticate(String token) throws ServletException
+    {
+        AuthenticatedUser result = null;
 
+        try
+        {
+            TokenData validationResult = getTokenValidator().validate(token);
+
+            result = AuthenticatedUser.from(validationResult);
+        }
+        catch (Exception e)
+        {
+            _logger.fine(() -> String.format("Failed to validate incoming token due to: %s", e.getMessage()));
+        }
+
+        return Optional.ofNullable(result);
+    }
     /**
      * Authorizes the current request based on the scopes in the token against the scopes defined
      * in the filter. If the filter has no scopes defined, all scopes are allowed.
@@ -151,7 +168,7 @@ public abstract class OAuthFilter implements Filter
      * @param scopesInToken the string of scopes presented in the token
      * @return true if access is allowed
      */
-    protected boolean authorize(String scopesInToken) throws ServletException
+    protected boolean isAuthorized(String scopesInToken) throws ServletException
     {
         List<String> requiredScopes = Arrays.asList(getScopes());
 
@@ -165,6 +182,24 @@ public abstract class OAuthFilter implements Filter
         Set<String> presentedScopesList = new HashSet<>(Arrays.asList(presentedScopes));
 
         return presentedScopesList.containsAll(requiredScopes);
+    }
+
+    @Override
+    public void destroy()
+    {
+        _logger.info("Destroying OAuthFilter");
+
+        if (getTokenValidator() != null)
+        {
+            try
+            {
+                getTokenValidator().close();
+            }
+            catch (IOException e)
+            {
+                _logger.log(Level.WARNING, "Problem closing token validator", e);
+            }
+        }
     }
 
     /**

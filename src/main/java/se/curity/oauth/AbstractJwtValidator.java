@@ -42,73 +42,111 @@ abstract class AbstractJwtValidator implements JwtValidator
     private final Map<String, JsonObject> _decodedJwtBodyByEncodedBody = new HashMap<>(1);
     private final Map<String, JwtHeader> _decodedJwtHeaderByEncodedHeader = new HashMap<>(1);
     private final JsonReaderFactory _jsonReaderFactory;
+    private final String _audience;
+    private final String _issuer;
 
-    AbstractJwtValidator(JsonReaderFactory jsonReaderFactory)
+    AbstractJwtValidator(String issuer, String audience, JsonReaderFactory jsonReaderFactory)
     {
+        _issuer = issuer;
+        _audience = audience;
         _jsonReaderFactory = jsonReaderFactory;
     }
 
-    @Override
-    public Optional<JwtData> validateAll(String jwt, String audience, String issuer) throws TokenValidationException
+    public final JwtData validate(String jwt) throws TokenValidationException
     {
-        if (!validate(jwt).isPresent())
-        {
-            return Optional.empty();
-        }
-
         String[] jwtParts = jwt.split("\\.");
 
         if (jwtParts.length != 3)
         {
-            throw new IllegalArgumentException("Incorrect JWT input");
+            throw new InvalidTokenFormatException();
         }
 
-        String body = jwtParts[1];
+        JsonObject jwtBody = decodeJwtBody(jwtParts[1]);
+        JwtHeader jwtHeader = decodeJwtHeader(jwtParts[0]);
+        byte[] jwtSignature = Base64.getUrlDecoder().decode(jwtParts[2]);
+        byte[] headerAndPayload = convertToBytes(jwtParts[0] + "." + jwtParts[1]);
 
-        JsonObject jsonObject = decodeJwtBody(body);
+        validateSignature(jwtHeader, jwtBody, jwtSignature, headerAndPayload);
 
         try
         {
-            long exp = JsonUtils.getLong(jsonObject, "exp");
-            long iat = JsonUtils.getLong(jsonObject, "iat");
+            long exp = JsonUtils.getLong(jwtBody, "exp");
+            long iat = JsonUtils.getLong(jwtBody, "iat");
 
-            String aud = JsonUtils.getString(jsonObject, "aud");
-            String iss = JsonUtils.getString(jsonObject, "iss");
+            String aud = JsonUtils.getString(jwtBody, "aud");
+            String iss = JsonUtils.getString(jwtBody, "iss");
 
             assert aud != null && aud.length() > 0 : "aud claim is not present in JWT";
             assert iss != null && iss.length() > 0 : "iss claim is not present in JWT";
 
-            if (!aud.equals(audience))
+            if (!aud.equals(_audience))
             {
-                return Optional.empty();
+                throw new InvalidAudienceException(_audience, aud);
             }
 
-            if (!iss.equals(issuer))
+            if (!iss.equals(_issuer))
             {
-                return Optional.empty();
+                throw new InvalidIssuerException(_issuer, iss);
             }
 
             Instant now = Instant.now();
 
             if (now.getEpochSecond() > exp)
             {
-                return Optional.empty();
+                throw new ExpiredTokenException();
             }
 
             if (now.getEpochSecond() < iat)
             {
-                return Optional.empty();
+                throw new InvalidIssuanceInstantException();
             }
         }
         catch (Exception e)
         {
             _logger.log(Level.INFO, "Could not extract token data", e);
 
-            throw new JwtValidationException("Failed to extract data from Token");
+            throw new InvalidTokenFormatException("Failed to extract data from Token");
         }
 
-        return Optional.of(new JwtData(jsonObject));
+        return new JwtData(jwtBody);
     }
+
+    private void validateSignature(JwtHeader jwtHeader, JsonObject jwtBody, byte[] jwtSignatureData,
+                                   byte[] headerAndPayload)
+            throws TokenValidationException
+    {
+        String algorithm = jwtHeader.getAlgorithm();
+
+        if (algorithm == null || algorithm.length() <= 0)
+        {
+            throw new MissingAlgorithmException();
+        }
+
+        if (canRecognizeAlg(algorithm))
+        {
+            Optional<PublicKey> maybeKey = getPublicKey(jwtHeader);
+
+            if (!maybeKey.isPresent())
+            {
+                _logger.warning("Received token but could not find matching key");
+
+                throw new UnknownSignatureVerificationKey();
+            }
+
+            if (!verifySignature(headerAndPayload, jwtSignatureData, maybeKey.get()))
+            {
+                throw new InvalidSignatureException();
+            }
+        }
+        else
+        {
+            _logger.warning(() -> String.format("Requested JsonWebKey using unrecognizable alg: %s", algorithm));
+
+            throw new UnknownAlgorithmException(algorithm);
+        }
+    }
+
+    protected abstract Optional<PublicKey> getPublicKey(JwtHeader jwtHeader);
 
     /**
      * Convert base64 to bytes (ASCII)
@@ -116,7 +154,7 @@ abstract class AbstractJwtValidator implements JwtValidator
      * @param input input
      * @return The array of bytes
      */
-    byte[] convertToBytes(String input)
+    private byte[] convertToBytes(String input)
     {
         byte[] bytes = new byte[input.length()];
 
@@ -135,7 +173,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         return bytes;
     }
 
-    boolean validateSignature(byte[] signingInput, byte[] signature, PublicKey publicKey)
+    private boolean verifySignature(byte[] signingInput, byte[] signature, PublicKey publicKey)
     {
         try
         {
@@ -152,9 +190,9 @@ abstract class AbstractJwtValidator implements JwtValidator
         }
     }
 
-    PublicKey getKeyFromModAndExp(String modulus, String exponent) throws Exception
+    private boolean canRecognizeAlg(String alg)
     {
-        return RsaPublicKeyCreator.createPublicKey(modulus, exponent);
+        return alg.equals("RS256");
     }
 
     @Override
@@ -163,7 +201,7 @@ abstract class AbstractJwtValidator implements JwtValidator
 
     }
 
-    JsonObject decodeJwtBody(String body)
+    private JsonObject decodeJwtBody(String body)
     {
         return _decodedJwtBodyByEncodedBody.computeIfAbsent(body, key ->
         {
@@ -175,7 +213,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         });
     }
 
-    JwtHeader decodeJwtHeader(String header)
+    private JwtHeader decodeJwtHeader(String header)
     {
         return _decodedJwtHeaderByEncodedHeader.computeIfAbsent(header, key ->
         {

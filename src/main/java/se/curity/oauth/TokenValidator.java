@@ -17,9 +17,8 @@
 package se.curity.oauth;
 
 import java.io.Closeable;
-import java.util.Optional;
 
 public interface TokenValidator extends Closeable
 {
-    Optional<? extends TokenData> validate(String token) throws TokenValidationException;
+    TokenData validate(String token) throws TokenValidationException;
 }

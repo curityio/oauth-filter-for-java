@@ -36,7 +36,7 @@ import java.util.function.Supplier;
  * @param <K> key type
  * @param <V> value type
  */
-public class TimeBasedCache<K, V>
+class TimeBasedCache<K, V>
 {
     private final Object _cacheLock = new Object();
 
@@ -49,15 +49,15 @@ public class TimeBasedCache<K, V>
     private final Supplier<Map<K, V>> _valuesSupplier;
     private final Clock _clock;
 
-    public TimeBasedCache(Duration minTimeBetweenReloads, Supplier<Map<K, V>> valuesSupplier)
+    TimeBasedCache(Duration minTimeBetweenReloads, Supplier<Map<K, V>> valuesSupplier)
     {
         this(minTimeBetweenReloads, valuesSupplier, Collections.emptyMap(), Clock.systemDefaultZone());
     }
 
-    public TimeBasedCache(Duration minTimeBetweenReloads,
-                          Supplier<Map<K, V>> valuesSupplier,
-                          Map<K, V> initialCache,
-                          Clock clock)
+    TimeBasedCache(Duration minTimeBetweenReloads,
+                   Supplier<Map<K, V>> valuesSupplier,
+                   Map<K, V> initialCache,
+                   Clock clock)
     {
         _minTimeBetweenReloads = minTimeBetweenReloads;
         _valuesSupplier = valuesSupplier;
@@ -84,7 +84,7 @@ public class TimeBasedCache<K, V>
         return value;
     }
 
-    public void clear()
+    void clear()
     {
         synchronized (_cacheLock)
         {
@@ -109,12 +109,12 @@ public class TimeBasedCache<K, V>
         }
     }
 
-    public Optional<Instant> getLastReloadInstant()
+    Optional<Instant> getLastReloadInstant()
     {
         return Optional.ofNullable(_lastLoading);
     }
 
-    public Duration getMinTimeBetweenReloads()
+    Duration getMinTimeBetweenReloads()
     {
         return _minTimeBetweenReloads;
     }

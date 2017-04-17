@@ -21,10 +21,8 @@ import javax.json.spi.JsonProvider;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OAuthJwtFilter extends OAuthFilter
@@ -40,8 +38,9 @@ public class OAuthJwtFilter extends OAuthFilter
     private interface InitParams
     {
         String OAUTH_HOST = "oauthHost";
-        String OAUTH_PORT = "oauthPort";
         String SCOPE = "scope";
+        String ISSUER = "issuer";
+        String AUDIENCE = "audience";
         String MIN_KID_RELOAD_TIME = "_minKidReloadTimeInSeconds";
     }
 
@@ -99,47 +98,16 @@ public class OAuthJwtFilter extends OAuthFilter
         // the ReaderFactory using the filter's config.
         JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
         WebKeysClient webKeysClient = HttpClientProvider.provider().createWebKeysClient(initParams);
+        String audience = FilterHelper.getInitParamValue(InitParams.AUDIENCE, initParams);
+        String issuer = FilterHelper.getInitParamValue(InitParams.ISSUER, initParams);
 
-        return _jwtValidator = new JwtValidatorWithJwk(_minKidReloadTimeInSeconds, webKeysClient, jsonReaderFactory);
+        return _jwtValidator = new JwtValidatorWithJwk(_minKidReloadTimeInSeconds, webKeysClient, audience, issuer,
+                jsonReaderFactory);
     }
 
     @Override
-    protected Optional<AuthenticatedUser> authenticate(String token) throws IOException, ServletException
+    protected TokenValidator getTokenValidator()
     {
-        AuthenticatedUser result = null;
-
-        try
-        {
-            Optional<? extends TokenData> validationResult = _jwtValidator.validate(token);
-
-            if (validationResult.isPresent())
-            {
-                result = AuthenticatedUser.from(validationResult.get());
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.fine(() -> String.format("Failed to validate incoming token due to: %s", e.getMessage()));
-        }
-
-        return Optional.ofNullable(result);
-    }
-
-    @Override
-    public void destroy()
-    {
-        _logger.info("Destroying OAuthFilter");
-
-        if (_jwtValidator != null)
-        {
-            try
-            {
-                _jwtValidator.close();
-            }
-            catch (IOException e)
-            {
-                _logger.log(Level.WARNING, "Problem closing jwk client", e);
-            }
-        }
+        return _jwtValidator;
     }
 }

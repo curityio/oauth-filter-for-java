@@ -21,10 +21,7 @@ import javax.json.spi.JsonProvider;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
-import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static se.curity.oauth.FilterHelper.getInitParamValue;
@@ -77,6 +74,12 @@ public class OAuthOpaqueFilter extends OAuthFilter
         return _oauthHost;
     }
 
+    @Override
+    protected TokenValidator getTokenValidator()
+    {
+        return _opaqueTokenValidator;
+    }
+
     protected String[] getScopes() throws UnavailableException
     {
         return _scopes == null ? NO_SCOPES : _scopes;
@@ -92,47 +95,5 @@ public class OAuthOpaqueFilter extends OAuthFilter
                 .createIntrospectionClient(initParams);
 
         return new OpaqueTokenValidator(introspectionClient, jsonReaderFactory);
-    }
-
-    @Override
-    protected Optional<AuthenticatedUser> authenticate(String token) throws ServletException
-    {
-        AuthenticatedUser result = null;
-
-        try
-        {
-            Optional<? extends TokenData> validationResult = _opaqueTokenValidator.validate(token);
-
-            if (validationResult.isPresent())
-            {
-                TokenData opaqueToken = validationResult.get();
-
-                result = AuthenticatedUser.from(validationResult.get());
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.fine(() -> String.format("Failed to validate incoming token due to: %s", e.getMessage()));
-        }
-
-        return Optional.ofNullable(result);
-    }
-
-    @Override
-    public void destroy()
-    {
-        _logger.info("Destroying OAuthFilter");
-
-        if (_opaqueTokenValidator != null)
-        {
-            try
-            {
-                _opaqueTokenValidator.close();
-            }
-            catch (IOException e)
-            {
-                _logger.log(Level.WARNING, "Problem closing jwk client", e);
-            }
-        }
     }
 }

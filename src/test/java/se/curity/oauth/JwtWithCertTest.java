@@ -34,7 +34,6 @@ import java.security.cert.Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -77,28 +76,27 @@ public class JwtWithCertTest
     @Test
     public void testFindAndValidateWithOneCert() throws Exception
     {
-        JwtValidator validator = new JwtValidatorWithCert(prepareKeyMap());
+        JwtValidator validator = new JwtValidatorWithCert(ISSUER, AUDIENCE, prepareKeyMap());
 
         _logger.info("test token = {}", _testToken);
 
-        Optional<JwtData> validatedToken = validator.validate(_testToken);
+        JwtData validatedToken = validator.validate(_testToken);
 
         assertNotNull(validatedToken);
-        assertTrue(validatedToken.isPresent());
     }
 
     @Test
     public void testValidContentInToken() throws Exception
     {
-        JwtValidator validator = new JwtValidatorWithCert(prepareKeyMap());
+        JwtValidator validator = new JwtValidatorWithCert(ISSUER, AUDIENCE, prepareKeyMap());
 
-        Optional<JwtData> result = validator.validateAll(_testToken, AUDIENCE, ISSUER);
+        JwtData result = validator.validate(_testToken);
 
         _logger.info("test token = {}", _testToken);
 
-        assertTrue(result.isPresent());
+        assertNotNull(result);
 
-        JsonObject jsonObject = result.get().getJsonObject();
+        JsonObject jsonObject = result.getJsonObject();
 
         assertTrue(jsonObject.containsKey("sub"));
         assertTrue(jsonObject.containsKey(EXTRA_CLAIM));
