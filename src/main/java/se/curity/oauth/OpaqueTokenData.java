@@ -17,24 +17,32 @@
 package se.curity.oauth;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-class OpaqueTokenData extends TokenData implements Expirable
+class OpaqueTokenData implements TokenData, Expirable
 {
+    private static final String[] NO_SCOPES = {};
+
     private final Instant _expiresAt;
-    private final String _scope;
+    private final Set<String> _scopes;
     private final String _subject;
 
     OpaqueTokenData(String subject, long expiresAt, String scope)
     {
         _subject = subject;
-        _scope = scope;
         _expiresAt = Instant.ofEpochSecond(expiresAt);
+
+        String[] presentedScopes = scope == null ? NO_SCOPES : scope.split("\\s+");
+
+        _scopes = new HashSet<>(Arrays.asList(presentedScopes));
     }
 
     @Override
-    public String getScope()
+    public Set<String> getScopes()
     {
-        return _scope;
+        return _scopes;
     }
 
     @Override

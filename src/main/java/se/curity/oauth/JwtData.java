@@ -18,17 +18,28 @@ package se.curity.oauth;
 
 import javax.json.JsonObject;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-public class JwtData extends TokenData implements Expirable
+public class JwtData implements TokenData, Expirable
 {
+    private static final String[] NO_SCOPES = {};
+
     private final JsonObject _jsonObject;
+    private final Set<String> _scopes;
 
     JwtData(JsonObject jsonObject)
     {
         _jsonObject = jsonObject;
+
+        String scopesInToken = JsonUtils.getString(_jsonObject, "scope");
+        String[] presentedScopes = scopesInToken == null ? NO_SCOPES : scopesInToken.split("\\s+");
+        
+        _scopes = new HashSet<>(Arrays.asList(presentedScopes));
     }
 
-    public JsonObject getJsonObject()
+    JsonObject getJsonObject()
     {
         return _jsonObject;
     }
@@ -40,9 +51,9 @@ public class JwtData extends TokenData implements Expirable
     }
 
     @Override
-    public String getScope()
+    public Set<String> getScopes()
     {
-        return JsonUtils.getString(_jsonObject, "scope");
+        return _scopes;
     }
 
     @Override

@@ -44,7 +44,7 @@ public class OAuthOpaqueFilter extends OAuthFilter
         {
             if (_opaqueTokenValidator == null)
             {
-                _opaqueTokenValidator = createTokenValidator(_initParams);
+                _opaqueTokenValidator = createTokenValidator(getFilterConfiguration());
 
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }

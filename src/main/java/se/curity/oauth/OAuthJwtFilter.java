@@ -47,14 +47,14 @@ public class OAuthJwtFilter extends OAuthFilter
 
         Optional<Long> minKidReloadTime = FilterHelper.getOptionalInitParamValue(
                 InitParams.MIN_KID_RELOAD_TIME,
-                _initParams, Long::parseLong);
+                getFilterConfiguration(), Long::parseLong);
         _minKidReloadTimeInSeconds = minKidReloadTime.orElse(_minKidReloadTimeInSeconds);
 
         synchronized (this)
         {
             if (_jwtValidator == null)
             {
-                _jwtValidator = createTokenValidator(_initParams);
+                _jwtValidator = createTokenValidator(getFilterConfiguration());
                 
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
@@ -66,15 +66,15 @@ public class OAuthJwtFilter extends OAuthFilter
     }
 
     @Override
-    protected TokenValidator createTokenValidator(Map<String, ?> initParams) throws UnavailableException
+    protected TokenValidator createTokenValidator(Map<String, ?> filterConfig) throws UnavailableException
     {
         // Pass all of the filter's config to the ReaderFactory factory method. It'll ignore anything it doesn't
         // understand (per JSR 353). This way, clients can change the provider using the service locator and configure
         // the ReaderFactory using the filter's config.
-        JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(initParams);
-        WebKeysClient webKeysClient = HttpClientProvider.provider().createWebKeysClient(initParams);
-        String audience = FilterHelper.getInitParamValue(InitParams.AUDIENCE, initParams);
-        String issuer = FilterHelper.getInitParamValue(InitParams.ISSUER, initParams);
+        JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(filterConfig);
+        WebKeysClient webKeysClient = HttpClientProvider.provider().createWebKeysClient(filterConfig);
+        String audience = FilterHelper.getInitParamValue(InitParams.AUDIENCE, filterConfig);
+        String issuer = FilterHelper.getInitParamValue(InitParams.ISSUER, filterConfig);
 
         return _jwtValidator = new JwtValidatorWithJwk(_minKidReloadTimeInSeconds, webKeysClient, audience, issuer,
                 jsonReaderFactory);

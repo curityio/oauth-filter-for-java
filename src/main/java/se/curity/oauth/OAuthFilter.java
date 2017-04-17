@@ -27,11 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,8 +41,7 @@ public abstract class OAuthFilter implements Filter
     private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private static final String AUTHORIZATION = "Authorization";
 
-    protected Map<String, String> _initParams; // Protected, so subclasses don't have to repeat the conversion to this
-
+    private Map<String, String> _filterConfig; // Protected, so subclasses don't have to repeat the conversion to this
     private String _oauthHost = null;
     private String[] _scopes = null;
 
@@ -57,11 +54,11 @@ public abstract class OAuthFilter implements Filter
     @Override
     public void init(FilterConfig filterConfig) throws ServletException
     {
-        _initParams = FilterHelper.initParamsMapFrom(filterConfig);
+        _filterConfig = FilterHelper.initParamsMapFrom(filterConfig);
 
-        _oauthHost = FilterHelper.getInitParamValue(InitParams.OAUTH_HOST, _initParams);
+        _oauthHost = FilterHelper.getInitParamValue(InitParams.OAUTH_HOST, _filterConfig);
 
-        _scopes = FilterHelper.getOptionalInitParamValue(InitParams.SCOPE, _initParams, it -> it.split("\\s+"))
+        _scopes = FilterHelper.getOptionalInitParamValue(InitParams.SCOPE, _filterConfig, it -> it.split("\\s+"))
                 .orElse(NO_SCOPES);
     }
 
@@ -101,7 +98,7 @@ public abstract class OAuthFilter implements Filter
 
         AuthenticatedUser authenticatedUser = maybeAuthenticatedUser.get();
 
-        if (!isAuthorized(authenticatedUser.getScope().orElse(null)))
+        if (!isAuthorized(authenticatedUser))
         {
             //403 Forbidden Scope header
             setForbidden403(response, oauthHost);
@@ -115,6 +112,11 @@ public abstract class OAuthFilter implements Filter
         {
             filterChain.doFilter(servletRequest, servletResponse);
         }
+    }
+
+    public Map<String, String> getFilterConfiguration()
+    {
+        return _filterConfig;
     }
 
     private void setReAuthenticate401(HttpServletResponse response, String oauthHost) throws IOException
@@ -180,26 +182,22 @@ public abstract class OAuthFilter implements Filter
         return Optional.ofNullable(result);
     }
     /**
-     * Authorizes the current request based on the scopes in the token against the scopes defined
-     * in the filter. If the filter has no scopes defined, all scopes are allowed.
-     * The filter will ensure that the union of all scopes required are available in the token.
-     * @param scopesInToken the string of scopes presented in the token
+     * Authorizes the current request by checking that all configured scopes are included in the one presented in the
+     * request.
+     *
+     * <p>If no scopes were configured for the filter, then any request is authorized. When a set of scopes are
+     * configured, however, the filter will ensure that all such scopes are included in the presented token.</p>
+     *
+     * @param authenticatedUser the user that was authenticated
      * @return true if access is allowed
      */
-    protected boolean isAuthorized(String scopesInToken) throws ServletException
+    protected boolean isAuthorized(AuthenticatedUser authenticatedUser) throws ServletException
     {
         List<String> requiredScopes = Arrays.asList(_scopes);
 
-        if (requiredScopes.size() == 0)
-        {
-            //No scopes required for authorization
-            return true;
-        }
+        // No scopes required for authorization
+        return requiredScopes.isEmpty() || authenticatedUser.getScopes().containsAll(requiredScopes);
 
-        String[] presentedScopes = scopesInToken == null ? NO_SCOPES : scopesInToken.split("\\s+");
-        Set<String> presentedScopesList = new HashSet<>(Arrays.asList(presentedScopes));
-
-        return presentedScopesList.containsAll(requiredScopes);
     }
 
     @Override

@@ -17,17 +17,17 @@
 package se.curity.oauth;
 
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 
 public class AuthenticatedUser
 {
     private final String _sub;
-    private final String _scope;
+    private final Set<String> _scopes;
 
-    private AuthenticatedUser(String subject, String scope)
+    private AuthenticatedUser(String subject, Set<String> scopes)
     {
         _sub = subject;
-        _scope = scope;
+        _scopes = scopes;
     }
 
     public String getSubject()
@@ -35,9 +35,9 @@ public class AuthenticatedUser
         return _sub;
     }
 
-    public Optional<String> getScope()
+    public Set<String> getScopes()
     {
-        return Optional.ofNullable(_scope);
+        return _scopes;
     }
 
     static AuthenticatedUser from(TokenData tokenData)
@@ -48,6 +48,6 @@ public class AuthenticatedUser
 
         Objects.requireNonNull(subject);
 
-        return new AuthenticatedUser(subject, tokenData.getScope());
+        return new AuthenticatedUser(subject, tokenData.getScopes());
     }
 }

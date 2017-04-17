@@ -16,9 +16,15 @@
 
 package se.curity.oauth;
 
-public abstract class TokenData
-{
-    public abstract String getSubject();
+import java.util.Collections;
+import java.util.Set;
 
-    public abstract String getScope();
+public interface TokenData
+{
+    String getSubject();
+
+    default Set<String> getScopes()
+    {
+        return Collections.emptySet();
+    }
 }
