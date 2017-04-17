@@ -37,7 +37,6 @@ public abstract class OAuthFilter implements Filter
 {
     private static final String[] NO_SCOPES = {};
     private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
-    private static final String PRINCIPAL = "principal";
     private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private static final String AUTHORIZATION = "Authorization";
 
@@ -106,15 +105,15 @@ public abstract class OAuthFilter implements Filter
             return;
         }
 
-        servletRequest.setAttribute(PRINCIPAL, maybeAuthenticatedUser);
-
         if (filterChain != null)
         {
-            filterChain.doFilter(servletRequest, servletResponse);
+            filterChain.doFilter(
+                    new AuthenticatedUserRequestWrapper((HttpServletRequest)servletRequest, authenticatedUser),
+                    servletResponse);
         }
     }
 
-    public Map<String, String> getFilterConfiguration()
+    protected Map<String, String> getFilterConfiguration()
     {
         return _filterConfig;
     }
@@ -197,7 +196,6 @@ public abstract class OAuthFilter implements Filter
 
         // No scopes required for authorization
         return requiredScopes.isEmpty() || authenticatedUser.getScopes().containsAll(requiredScopes);
-
     }
 
     @Override
