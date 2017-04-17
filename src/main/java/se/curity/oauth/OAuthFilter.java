@@ -37,16 +37,33 @@ import java.util.logging.Logger;
 
 public abstract class OAuthFilter implements Filter
 {
-    static final String[] NO_SCOPES = {};
+    private static final String[] NO_SCOPES = {};
     private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
-
     private static final String PRINCIPAL = "principal";
-    private static final String[] NO_PRESENTED_SCOPES = new String[0];
     private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private static final String AUTHORIZATION = "Authorization";
 
+    protected Map<String, String> _initParams; // Protected, so subclasses don't have to repeat the conversion to this
+
+    private String _oauthHost = null;
+    private String[] _scopes = null;
+
+    private interface InitParams
+    {
+        String OAUTH_HOST = "oauthHost";
+        String SCOPE = "scope";
+    }
+
     @Override
-    public abstract void init(FilterConfig filterConfig) throws ServletException;
+    public void init(FilterConfig filterConfig) throws ServletException
+    {
+        _initParams = FilterHelper.initParamsMapFrom(filterConfig);
+
+        _oauthHost = FilterHelper.getInitParamValue(InitParams.OAUTH_HOST, _initParams);
+
+        _scopes = FilterHelper.getOptionalInitParamValue(InitParams.SCOPE, _initParams, it -> it.split("\\s+"))
+                .orElse(NO_SCOPES);
+    }
 
     /**
      * The doFilter is the primary filter method of a Servlet filter. It is implemented as a final method
@@ -124,14 +141,15 @@ public abstract class OAuthFilter implements Filter
      *
      * @return The OAuth server's realm as string
      */
-    protected abstract String getOAuthServerRealm() throws ServletException;
+    protected String getOAuthServerRealm() throws UnavailableException
+    {
+        if (_oauthHost == null)
+        {
+            throw new UnavailableException("Filter not initialized");
+        }
 
-    /**
-     * Returns the configured scopes that are required to be present in a token for the
-     * request to be authorized.
-     * @return An array of required scopes, or an empty array if all scopes are allowed
-     */
-    protected abstract String[] getScopes() throws ServletException;
+        return _oauthHost;
+    }
 
     protected abstract TokenValidator createTokenValidator(Map<String, ?> initParams) throws UnavailableException;
 
@@ -142,7 +160,7 @@ public abstract class OAuthFilter implements Filter
      * must perform the appropriate operation to validate the token.
      * @param token - The token extracted from the Authorization header and stripped of the Bearer
      * @return An AuthenticatedUser if the token was valid, or null if not.
-     * @throws ServletException
+     * @throws ServletException when authentication fails for some exceptional reason
      */
     protected Optional<AuthenticatedUser> authenticate(String token) throws ServletException
     {
@@ -170,7 +188,7 @@ public abstract class OAuthFilter implements Filter
      */
     protected boolean isAuthorized(String scopesInToken) throws ServletException
     {
-        List<String> requiredScopes = Arrays.asList(getScopes());
+        List<String> requiredScopes = Arrays.asList(_scopes);
 
         if (requiredScopes.size() == 0)
         {
@@ -178,7 +196,7 @@ public abstract class OAuthFilter implements Filter
             return true;
         }
 
-        String[] presentedScopes = scopesInToken == null ? NO_PRESENTED_SCOPES : scopesInToken.split("\\s+");
+        String[] presentedScopes = scopesInToken == null ? NO_SCOPES : scopesInToken.split("\\s+");
         Set<String> presentedScopesList = new HashSet<>(Arrays.asList(presentedScopes));
 
         return presentedScopesList.containsAll(requiredScopes);

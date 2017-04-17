@@ -24,15 +24,10 @@ import javax.servlet.UnavailableException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import static se.curity.oauth.FilterHelper.getInitParamValue;
-import static se.curity.oauth.FilterHelper.initParamsMapFrom;
-
 public class OAuthOpaqueFilter extends OAuthFilter
 {
     private static final Logger _logger = Logger.getLogger(OAuthOpaqueFilter.class.getName());
 
-    private String _oauthHost = null;
-    private String[] _scopes = null;
     private TokenValidator _opaqueTokenValidator = null;
 
     private interface InitParams
@@ -40,19 +35,16 @@ public class OAuthOpaqueFilter extends OAuthFilter
         String SCOPE = "scope";
     }
 
+    @Override
     public void init(FilterConfig filterConfig) throws ServletException
     {
-        Map<String, String> initParams = initParamsMapFrom(filterConfig);
-
-        String scope = getInitParamValue(InitParams.SCOPE, initParams);
-
-        _scopes = scope.split("\\s+");
+        super.init(filterConfig);
 
         synchronized (this)
         {
             if (_opaqueTokenValidator == null)
             {
-                _opaqueTokenValidator = createTokenValidator(initParams);
+                _opaqueTokenValidator = createTokenValidator(_initParams);
 
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
@@ -64,25 +56,9 @@ public class OAuthOpaqueFilter extends OAuthFilter
     }
 
     @Override
-    protected String getOAuthServerRealm() throws UnavailableException
-    {
-        if (_oauthHost == null)
-        {
-            throw new UnavailableException("Filter not initialized");
-        }
-
-        return _oauthHost;
-    }
-
-    @Override
     protected TokenValidator getTokenValidator()
     {
         return _opaqueTokenValidator;
-    }
-
-    protected String[] getScopes() throws UnavailableException
-    {
-        return _scopes == null ? NO_SCOPES : _scopes;
     }
 
     @Override

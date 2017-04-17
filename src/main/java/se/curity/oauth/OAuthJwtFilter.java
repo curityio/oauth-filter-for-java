@@ -29,40 +29,32 @@ public class OAuthJwtFilter extends OAuthFilter
 {
     private static final Logger _logger = Logger.getLogger(OAuthJwtFilter.class.getName());
 
-    private String _oauthHost = null;
-    private String[] _scopes = null;
     private long _minKidReloadTimeInSeconds = 3600;
 
     private TokenValidator _jwtValidator = null;
 
     private interface InitParams
     {
-        String OAUTH_HOST = "oauthHost";
-        String SCOPE = "scope";
         String ISSUER = "issuer";
         String AUDIENCE = "audience";
         String MIN_KID_RELOAD_TIME = "_minKidReloadTimeInSeconds";
     }
 
+    @Override
     public void init(FilterConfig filterConfig) throws ServletException
     {
-        Map<String, String> initParams = FilterHelper.initParamsMapFrom(filterConfig);
-
-        _oauthHost = FilterHelper.getInitParamValue(InitParams.OAUTH_HOST, initParams);
-
-        String scope = FilterHelper.getInitParamValue(InitParams.SCOPE, initParams);
-        _scopes = scope.split("\\s+");
+        super.init(filterConfig);
 
         Optional<Long> minKidReloadTime = FilterHelper.getOptionalInitParamValue(
                 InitParams.MIN_KID_RELOAD_TIME,
-                initParams, Long::parseLong);
+                _initParams, Long::parseLong);
         _minKidReloadTimeInSeconds = minKidReloadTime.orElse(_minKidReloadTimeInSeconds);
 
         synchronized (this)
         {
             if (_jwtValidator == null)
             {
-                _jwtValidator = createTokenValidator(initParams);
+                _jwtValidator = createTokenValidator(_initParams);
                 
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
@@ -71,23 +63,6 @@ public class OAuthJwtFilter extends OAuthFilter
                 _logger.warning("Attempted to set webkey URI more than once! Ignoring further attempts.");
             }
         }
-    }
-
-    @Override
-    protected String getOAuthServerRealm()
-    {
-        if (_oauthHost == null)
-        {
-            throw new IllegalStateException("Filter not initialized");
-        }
-        
-        return _oauthHost;
-    }
-
-    @Override
-    protected String[] getScopes() throws UnavailableException
-    {
-        return _scopes == null ? NO_SCOPES : _scopes;
     }
 
     @Override
