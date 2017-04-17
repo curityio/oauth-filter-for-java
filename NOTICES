@@ -13,9 +13,11 @@ This document contains attributions, copyright notices, and links to the softwar
 
 ## License
 
-The Software is licensed under Apache v. 2 license Apache v. 2.
+The Software is licensed under the terms of the Apache v. 2 license agreement.
 
 ## Included Components
+
+The Software makes use of the following third-party open source software libraries.
 
 ### Apache HttpComponents
 
@@ -50,7 +52,7 @@ The Apache Software Foundation (http://www.apache.org/).
 
 <pre>Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.</pre>
 
-### Optionally Included Components
+## Optionally Included Components
 
 If the Software is obtained in source code form, the following third-party open source software libraries are also used by the Software.
 
