@@ -49,7 +49,7 @@ class AuthenticatedUserRequestWrapper extends HttpServletRequestWrapper
     @Override
     public String getRemoteUser()
     {
-        return _authenticatedUser == null ? _request.getRemoteUser() :  _authenticatedUser.getSubject();
+        return _authenticatedUser == null ? _request.getRemoteUser() : _authenticatedUser.getSubject();
     }
 
     @Override
@@ -68,10 +68,9 @@ class AuthenticatedUserRequestWrapper extends HttpServletRequestWrapper
     @Override
     public boolean authenticate(HttpServletResponse response) throws IOException, ServletException
     {
-        return !(_authenticatedUser == null &&
-                response.isCommitted() && (
-                        response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED ||
-                                response.getStatus() == HttpServletResponse.SC_FORBIDDEN));
+        return _authenticatedUser != null || (response.isCommitted() &&
+                (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED ||
+                        response.getStatus() == HttpServletResponse.SC_FORBIDDEN));
     }
 
     @Override
