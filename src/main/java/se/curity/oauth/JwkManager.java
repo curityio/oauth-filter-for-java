@@ -43,11 +43,6 @@ final class JwkManager implements Closeable
     private final ScheduledExecutorService _executor = Executors.newSingleThreadScheduledExecutor();
     private final JsonReaderFactory _jsonReaderFactory;
 
-    JwkManager(long minKidReloadTimeInSeconds, WebKeysClient webKeysClient)
-    {
-        this(minKidReloadTimeInSeconds, webKeysClient, JsonUtils.createDefaultReaderFactory());
-    }
-
     JwkManager(long minKidReloadTimeInSeconds, WebKeysClient webKeysClient, JsonReaderFactory jsonReaderFactory)
     {
         _jsonWebKeyByKID = new TimeBasedCache<>(Duration.ofSeconds(minKidReloadTimeInSeconds), this::reload);

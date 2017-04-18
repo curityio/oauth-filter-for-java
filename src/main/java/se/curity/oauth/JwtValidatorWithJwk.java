@@ -34,7 +34,7 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
     JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, String audience, String issuer,
                         JsonReaderFactory jsonReaderFactory)
     {
-        super(issuer, audience, JsonUtils.createDefaultReaderFactory());
+        super(issuer, audience, jsonReaderFactory);
         
         _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
     }

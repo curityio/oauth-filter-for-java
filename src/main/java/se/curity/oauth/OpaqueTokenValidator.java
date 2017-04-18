@@ -30,12 +30,7 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
     private final IntrospectionClient _introspectionClient;
     private final ExpirationBasedCache<String, OpaqueTokenData> _tokenCache;
     private final JsonReaderFactory _jsonReaderFactory;
-
-    public OpaqueTokenValidator(IntrospectionClient introspectionClient)
-    {
-        this(introspectionClient, JsonUtils.createDefaultReaderFactory());
-    }
-
+    
     OpaqueTokenValidator(IntrospectionClient introspectionClient, JsonReaderFactory jsonReaderFactory)
     {
         _introspectionClient = introspectionClient;

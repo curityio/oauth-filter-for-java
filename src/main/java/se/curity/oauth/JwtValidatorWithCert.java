@@ -16,6 +16,7 @@
 
 package se.curity.oauth;
 
+import javax.json.JsonReaderFactory;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Map;
@@ -30,7 +31,13 @@ final class JwtValidatorWithCert extends AbstractJwtValidator
 
     JwtValidatorWithCert(String issuer, String audience, Map<String, RSAPublicKey> publicKeys)
     {
-        super(issuer, audience, JsonUtils.createDefaultReaderFactory());
+        this(issuer, audience, publicKeys, JsonUtils.createDefaultReaderFactory());
+    }
+
+    JwtValidatorWithCert(String issuer, String audience, Map<String, RSAPublicKey> publicKeys,
+                         JsonReaderFactory jsonReaderFactory)
+    {
+        super(issuer, audience, jsonReaderFactory);
         
         _keys = publicKeys;
     }
