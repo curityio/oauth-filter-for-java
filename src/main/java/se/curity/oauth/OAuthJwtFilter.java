@@ -22,7 +22,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 public class OAuthJwtFilter extends OAuthFilter
@@ -45,10 +44,9 @@ public class OAuthJwtFilter extends OAuthFilter
     {
         super.init(filterConfig);
 
-        Optional<Long> minKidReloadTime = FilterHelper.getOptionalInitParamValue(
+        _minKidReloadTimeInSeconds = FilterHelper.getOptionalInitParamValue(
                 InitParams.MIN_KID_RELOAD_TIME,
-                getFilterConfiguration(), Long::parseLong);
-        _minKidReloadTimeInSeconds = minKidReloadTime.orElse(_minKidReloadTimeInSeconds);
+                getFilterConfiguration(), Long::parseLong).orElse(_minKidReloadTimeInSeconds);
 
         synchronized (this)
         {
