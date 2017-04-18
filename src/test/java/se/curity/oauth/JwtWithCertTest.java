@@ -60,7 +60,6 @@ public class JwtWithCertTest
     @Before
     public void before() throws Exception
     {
-
         loadKeyStore();
 
         PrivateKey key = getPrivateKey();
@@ -70,7 +69,7 @@ public class JwtWithCertTest
         Map<String, Object> attributes = new HashMap<>();
         attributes.put(EXTRA_CLAIM, EXTRA_CLAIM_VALUE);
 
-        _testToken = issuer.issueToken(SUBJECT,AUDIENCE,EXPIRATION,attributes);
+        _testToken = issuer.issueToken(SUBJECT, AUDIENCE, EXPIRATION, attributes);
     }
 
     @Test
@@ -153,6 +152,5 @@ public class JwtWithCertTest
         //Get key by alias (found in the p12 file using:
         //keytool -list -keystore test-root-ca.p12 -storepass foobar -storetype PKCS12
         return (Certificate)this._keyStore.getCertificate(KEY_ALIAS);
-
     }
 }
