@@ -39,23 +39,20 @@ import java.util.UUID;
 
 public class JwtTokenIssuer
 {
-    private static final Log logger = LogFactory.getLog(JwtTokenIssuer.class);
+    private static final Log _logger = LogFactory.getLog(JwtTokenIssuer.class);
 
-    private final int skewTolerance;
-    private final String issuer;
-    private final String algorithm;
-    private final PrivateKey privateKey;
-    private final Certificate cert;
-    private final String keyId;
+    private final int _skewTolerance;
+    private final String _issuer;
+    private final String _algorithm;
+    private final PrivateKey _privateKey;
+    private final Certificate _cert;
+    private final String _keyId;
 
-    private final Genson _genson = new GensonBuilder()
-            .setHtmlSafe(false)
-            .create();
+    private final Genson _genson = new GensonBuilder().setHtmlSafe(false).create();
 
     //Issue Unsigned token.
     public JwtTokenIssuer(String issuer)
     {
-
         this(issuer, 0, AlgorithmIdentifiers.NONE, null, null, null);
     }
 
@@ -80,7 +77,6 @@ public class JwtTokenIssuer
     //JWKS
     public JwtTokenIssuer(String issuer, String algorithm, PrivateKey privateKey, String keyId)
     {
-
         this(issuer, 0, algorithm, privateKey, null, keyId);
     }
 
@@ -88,18 +84,17 @@ public class JwtTokenIssuer
     private JwtTokenIssuer(String issuer, int skewTolerance, String algorithm, PrivateKey privateKey, Certificate
             cert, String keyId)
     {
-        this.issuer = issuer;
-        this.skewTolerance = skewTolerance * 60;
-        this.algorithm = algorithm;
-        this.privateKey = privateKey;
-        this.cert = cert;
-        this.keyId = keyId;
+        _issuer = issuer;
+        _skewTolerance = skewTolerance * 60;
+        _algorithm = algorithm;
+        _privateKey = privateKey;
+        _cert = cert;
+        _keyId = keyId;
     }
 
     String issueToken(String subject, String audience, int lifetimeInMinutes, Map<String, Object> attributes)
             throws Exception
     {
-
         String[] audiences = stringToArray(audience);
 
         return issueToken(subject, Arrays.asList(audiences), lifetimeInMinutes, attributes);
@@ -119,33 +114,33 @@ public class JwtTokenIssuer
 
         JsonWebSignature token = new JsonWebSignature();
 
-        if (AlgorithmIdentifiers.NONE.equals(this.algorithm) && privateKey == null)
+        if (AlgorithmIdentifiers.NONE.equals(this._algorithm) && _privateKey == null)
         {
             token.setAlgorithmConstraints(AlgorithmConstraints.ALLOW_ONLY_NONE);
         }
 
         long issuedAt = Instant.now().getEpochSecond();
-        long expirationTime = lifetimeInMinutes * 60 + issuedAt + skewTolerance;
+        long expirationTime = lifetimeInMinutes * 60 + issuedAt + _skewTolerance;
 
-        claims.put(ReservedClaimNames.ISSUER, issuer);
+        claims.put(ReservedClaimNames.ISSUER, _issuer);
         claims.put(ReservedClaimNames.SUBJECT, subject);
         claims.put(ReservedClaimNames.AUDIENCE, arrayOrString(audiences));
 
         claims.put(ReservedClaimNames.ISSUED_AT, issuedAt);
-        claims.put(ReservedClaimNames.NOT_BEFORE, issuedAt - skewTolerance);
+        claims.put(ReservedClaimNames.NOT_BEFORE, issuedAt - _skewTolerance);
         claims.put(ReservedClaimNames.EXPIRATION_TIME, expirationTime);
         claims.put(ReservedClaimNames.JWT_ID, UUID.randomUUID().toString());
 
         String payload = _genson.serialize(claims);
 
-        token.setHeader(ReservedClaimNames.ISSUER, issuer);
+        token.setHeader(ReservedClaimNames.ISSUER, _issuer);
 
         try
         {
-            if (this.cert != null)
+            if (this._cert != null)
             {
-                byte[] x5t = DigestUtils.sha(this.cert.getEncoded());
-                byte[] x5tS256 = DigestUtils.sha256(this.cert.getEncoded());
+                byte[] x5t = DigestUtils.sha(this._cert.getEncoded());
+                byte[] x5tS256 = DigestUtils.sha256(this._cert.getEncoded());
 
                 //Set DER encoded base64urlsafe string as header params
                 String b64x5t = org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString(x5t);
@@ -153,17 +148,15 @@ public class JwtTokenIssuer
 
                 token.setHeader("x5t", b64x5t);
                 token.setHeader("x5t#S256", b64x5tS256);
-                logger.trace("x5t: " + b64x5t);
-                logger.trace("x5t#256: " + b64x5tS256);
 
-
+                _logger.trace("x5t: " + b64x5t);
+                _logger.trace("x5t#256: " + b64x5tS256);
             }
-            else if (this.keyId != null)
+            else if (this._keyId != null)
             {
-                token.setKeyIdHeaderValue(this.keyId);
+                token.setKeyIdHeaderValue(this._keyId);
             }
         }
-
         catch (CertificateEncodingException ce)
         {
             throw new Exception("Unknown certificate encoding", ce);
@@ -171,25 +164,26 @@ public class JwtTokenIssuer
 
         token.setPayload(payload);
 
-        if (privateKey != null)
+        if (_privateKey != null)
         {
-            token.setKey(privateKey);     //Can be null for "none" algorithm
+            token.setKey(_privateKey);     //Can be null for "none" algorithm
         }
 
-        token.setAlgorithmHeaderValue(algorithm);
+        token.setAlgorithmHeaderValue(_algorithm);
 
         try
         {
             String serializedToken = token.getCompactSerialization();
-            logger.trace("Serialized Token: " + serializedToken);
 
-            if (logger.isTraceEnabled())
+            _logger.trace("Serialized Token: " + serializedToken);
+
+            if (_logger.isTraceEnabled())
             {
                 //With jose4j version 0.3.4 the getPayload will perform a Verify operation
                 //This requires the Public Key to be set as the Key.
-                if (this.cert != null)
+                if (this._cert != null)
                 {
-                    token.setKey(cert.getPublicKey());
+                    token.setKey(_cert.getPublicKey());
                     String headers = token.getHeader();
                     String body = token.getPayload();
                     String maskedToken = serializedToken.length() >= 20 ? serializedToken.substring(0, 10) : "";
@@ -197,17 +191,17 @@ public class JwtTokenIssuer
                     String message = String.format("Issuing token: %s******\nHeader = %s\nBody = %s",
                             maskedToken, headers, body);
 
-                    logger.trace(message);
+                    _logger.trace(message);
                 }
                 
-                logger.trace(serializedToken);
+                _logger.trace(serializedToken);
             }
 
             return serializedToken;
         }
         catch (JoseException e)
         {
-            logger.error("Could not issue token", e);
+            _logger.error("Could not issue token", e);
 
             throw new Exception("Could not issue a JWT token. See inner exception for details", e);
         }
@@ -226,6 +220,7 @@ public class JwtTokenIssuer
         {
             return data.get(0);
         }
+        
         return data;
     }
 }
