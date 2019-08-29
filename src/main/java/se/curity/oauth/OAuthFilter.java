@@ -169,7 +169,7 @@ public abstract class OAuthFilter implements Filter
 
         try
         {
-            TokenData validationResult = getTokenValidator().validate(token);
+            JsonData validationResult = getTokenValidator().validate(token);
 
             result = AuthenticatedUser.from(validationResult);
         }

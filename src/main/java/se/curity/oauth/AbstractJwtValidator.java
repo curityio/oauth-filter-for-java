@@ -51,7 +51,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         _jsonReaderFactory = jsonReaderFactory;
     }
 
-    public final JwtData validate(String jwt) throws TokenValidationException
+    public final JsonData validate(String jwt) throws TokenValidationException
     {
         String[] jwtParts = jwt.split("\\.");
 
@@ -107,7 +107,7 @@ abstract class AbstractJwtValidator implements JwtValidator
             throw new InvalidTokenFormatException("Failed to extract data from Token");
         }
 
-        return new JwtData(jwtBody);
+        return new JsonData(jwtBody);
     }
 
     private void validateSignature(JwtHeader jwtHeader, JsonObject jwtBody, byte[] jwtSignatureData,

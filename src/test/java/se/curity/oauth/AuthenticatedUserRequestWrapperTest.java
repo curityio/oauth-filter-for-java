@@ -20,6 +20,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
@@ -37,7 +40,9 @@ public class AuthenticatedUserRequestWrapperTest
     public void testCanAuthenticate() throws Exception
     {
         // GIVEN: an authenticated user
-        AuthenticatedUser user = AuthenticatedUser.from(() -> "test-user");
+        JsonObject json = Json.createObjectBuilder().add("sub", "test-user").build();
+        JsonData jsonData = new JsonData(json);
+        AuthenticatedUser user = AuthenticatedUser.from(jsonData);
 
         // AND: a request that wraps that authenticated user
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);

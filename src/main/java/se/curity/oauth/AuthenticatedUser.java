@@ -16,6 +16,8 @@
 
 package se.curity.oauth;
 
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,11 +25,13 @@ public class AuthenticatedUser
 {
     private final String _sub;
     private final Set<String> _scopes;
+    private final JsonData _jsonData;
 
-    private AuthenticatedUser(String subject, Set<String> scopes)
+    private AuthenticatedUser(String subject, Set<String> scopes, JsonData jsonData)
     {
         _sub = subject;
         _scopes = scopes;
+        _jsonData = jsonData;
     }
 
     public String getSubject()
@@ -40,7 +44,17 @@ public class AuthenticatedUser
         return _scopes;
     }
 
-    static AuthenticatedUser from(TokenData tokenData)
+    public JsonValue getClaim(String name)
+    {
+        return _jsonData.getClaim(name);
+    }
+
+    public JsonObject getClaims()
+    {
+        return _jsonData.getClaims();
+    }
+
+    static AuthenticatedUser from(JsonData tokenData)
     {
         Objects.requireNonNull(tokenData);
 
@@ -48,6 +62,6 @@ public class AuthenticatedUser
 
         Objects.requireNonNull(subject);
 
-        return new AuthenticatedUser(subject, tokenData.getScopes());
+        return new AuthenticatedUser(subject, tokenData.getScopes(), tokenData);
     }
 }

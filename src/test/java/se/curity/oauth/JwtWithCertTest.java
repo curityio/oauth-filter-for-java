@@ -79,7 +79,7 @@ public class JwtWithCertTest
 
         _logger.info("test token = {}", _testToken);
 
-        JwtData validatedToken = validator.validate(_testToken);
+        JsonData validatedToken = validator.validate(_testToken);
 
         assertNotNull(validatedToken);
     }
@@ -89,7 +89,7 @@ public class JwtWithCertTest
     {
         JwtValidator validator = new JwtValidatorWithCert(ISSUER, AUDIENCE, prepareKeyMap());
 
-        JwtData result = validator.validate(_testToken);
+        JsonData result = validator.validate(_testToken);
 
         _logger.info("test token = {}", _testToken);
 

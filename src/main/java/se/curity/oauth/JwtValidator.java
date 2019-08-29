@@ -24,5 +24,5 @@ interface JwtValidator extends TokenValidator
      * @return the content of the token body if token signature is valid, otherwise null
      * @throws TokenValidationException
      */
-    JwtData validate(String jwt) throws TokenValidationException;
+    JsonData validate(String jwt) throws TokenValidationException;
 }

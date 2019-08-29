@@ -22,11 +22,16 @@ import javax.json.JsonReaderFactory;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.spi.JsonProvider;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 final class JsonUtils
 {
+    private static final String[] NO_SCOPES = {};
+
     private JsonUtils()
     {
     }
@@ -34,6 +39,14 @@ final class JsonUtils
     static JsonReaderFactory createDefaultReaderFactory()
     {
         return JsonProvider.provider().createReaderFactory(Collections.emptyMap());
+    }
+
+    static Set<String> getScopes(JsonObject jsonObject)
+    {
+        String scopesInToken = getString(jsonObject, "scope");
+        String[] presentedScopes = scopesInToken == null ? NO_SCOPES : scopesInToken.split("\\s+");
+
+        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(presentedScopes)));
     }
 
     static String getString(JsonObject jsonObject, String name)
