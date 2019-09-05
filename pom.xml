@@ -12,7 +12,7 @@
   ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
--->  
+-->
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
          xmlns="http://maven.apache.org/POM/4.0.0">
@@ -144,7 +144,7 @@
     </dependencies>
 
     <dependencyManagement>
-        <dependencies>    
+        <dependencies>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
@@ -195,4 +195,17 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>customer-release-repo</id>
+            <name>Customer Release Repository</name>
+            <url>https://nexus.curity.se/nexus/content/repositories/customer-release-repo</url>
+        </repository>
+        <snapshotRepository>
+            <id>curity-snapshot-repo</id>
+            <name>Curity Snapshot Repository</name>
+            <url>https://nexus.curity.se/nexus/content/repositories/customer-snapshot-repo/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
