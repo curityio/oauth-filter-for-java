@@ -67,8 +67,8 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
 
             if (newToken.getExpiresAt().isAfter(Instant.now()))
             {
-                //Note: If this cache is backed by some persistent storage, the token should be
-                // hashed and not stored in clear text
+                //Note: If this cache is backed by some persistent storage, the token should be hashed and not stored
+                //      in clear text
                 _tokenCache.put(token, newToken);
 
                 return newToken;
