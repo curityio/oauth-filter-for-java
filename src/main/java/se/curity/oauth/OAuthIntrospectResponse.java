@@ -16,38 +16,24 @@
 
 package se.curity.oauth;
 
+import javax.json.JsonObject;
+
 class OAuthIntrospectResponse
 {
-    private final boolean _active;
-    private final String _subject;
-    private final String _scope;
-    private final long _expiration;
+    private final JsonObject _jsonObject;
 
-    OAuthIntrospectResponse(boolean active, String subject, String scope, long expiration)
+    OAuthIntrospectResponse(JsonObject jsonObject)
     {
-        _active = active;
-        _subject = subject;
-        _scope = scope;
-        _expiration = expiration;
+        _jsonObject = jsonObject;
     }
 
-    boolean getActive()
+    boolean isActive()
     {
-        return _active;
+        return _jsonObject.getBoolean("active");
     }
 
-    String getSubject()
+    JsonObject getJsonObject()
     {
-        return _subject;
-    }
-
-    String getScope()
-    {
-        return _scope;
-    }
-
-    long getExpiration()
-    {
-        return _expiration;
+        return _jsonObject;
     }
 }

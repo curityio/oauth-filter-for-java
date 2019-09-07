@@ -28,7 +28,7 @@ import java.util.Optional;
 public class OpaqueTokenValidator implements Closeable, TokenValidator
 {
     private final IntrospectionClient _introspectionClient;
-    private final ExpirationBasedCache<String, OpaqueTokenData> _tokenCache;
+    private final ExpirationBasedCache<String, JsonData> _tokenCache;
     private final JsonReaderFactory _jsonReaderFactory;
     
     OpaqueTokenValidator(IntrospectionClient introspectionClient, JsonReaderFactory jsonReaderFactory)
@@ -38,9 +38,9 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
         _jsonReaderFactory = jsonReaderFactory;
     }
 
-    public TokenData validate(String token) throws TokenValidationException
+    public JsonData validate(String token) throws TokenValidationException
     {
-        Optional<OpaqueTokenData> cachedValue = _tokenCache.get(token);
+        Optional<JsonData> cachedValue = _tokenCache.get(token);
 
         if (cachedValue.isPresent())
         {
@@ -61,10 +61,9 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
 
         OAuthIntrospectResponse response = parseIntrospectResponse(introspectJson);
 
-        if (response.getActive())
+        if (response.isActive())
         {
-            OpaqueTokenData newToken = new OpaqueTokenData(response.getSubject(), response.getExpiration(),
-                    response.getScope());
+            JsonData newToken = new JsonData(response.getJsonObject());
 
             if (newToken.getExpiresAt().isAfter(Instant.now()))
             {
@@ -90,8 +89,7 @@ public class OpaqueTokenValidator implements Closeable, TokenValidator
         JsonReader jsonReader = _jsonReaderFactory.createReader(new StringReader(introspectJson));
         JsonObject jsonObject = jsonReader.readObject();
 
-        return new OAuthIntrospectResponse(jsonObject.getBoolean("active"), jsonObject.getString("sub"),
-                jsonObject.getString("scope"), jsonObject.getInt("exp"));
+        return new OAuthIntrospectResponse(jsonObject);
     }
 
     @Override

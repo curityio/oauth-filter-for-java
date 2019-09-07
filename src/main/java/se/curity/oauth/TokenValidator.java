@@ -21,7 +21,7 @@ import java.io.IOException;
 
 public interface TokenValidator extends Closeable
 {
-    TokenData validate(String token) throws TokenValidationException;
+    JsonData validate(String token) throws TokenValidationException;
 
     @Override
     default void close() throws IOException {}

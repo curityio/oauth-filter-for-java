@@ -39,6 +39,7 @@ public abstract class OAuthFilter implements Filter
     private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
     private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private static final String AUTHORIZATION = "Authorization";
+    public static final String PRINCIPAL_ATTRIBUTE_NAME = "principal";
 
     private Map<String, String> _filterConfig; // Protected, so subclasses don't have to repeat the conversion to this
     private String _oauthHost = null;
@@ -105,6 +106,8 @@ public abstract class OAuthFilter implements Filter
             return;
         }
 
+        servletRequest.setAttribute(PRINCIPAL_ATTRIBUTE_NAME, authenticatedUser);
+
         if (filterChain != null)
         {
             filterChain.doFilter(
@@ -169,7 +172,7 @@ public abstract class OAuthFilter implements Filter
 
         try
         {
-            TokenData validationResult = getTokenValidator().validate(token);
+            JsonData validationResult = getTokenValidator().validate(token);
 
             result = AuthenticatedUser.from(validationResult);
         }
