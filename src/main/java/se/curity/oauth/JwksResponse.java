@@ -16,13 +16,11 @@
 
 package se.curity.oauth;
 
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class JwksResponse
 {
@@ -38,9 +36,9 @@ class JwksResponse
         }
         else
         {
-            _keys = Stream.of((JsonArray)keys)
+            _keys = keys.asJsonArray().stream()
                     .filter(it -> it.getValueType() == JsonValue.ValueType.OBJECT)
-                    .map(it -> (JsonObject) it)
+                    .map(JsonValue::asJsonObject)
                     .map(JsonWebKey::new)
                     .collect(Collectors.toList());
         }

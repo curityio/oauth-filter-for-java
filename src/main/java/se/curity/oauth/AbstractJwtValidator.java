@@ -199,7 +199,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         return _decodedJwtBodyByEncodedBody.computeIfAbsent(body, key ->
         {
             // TODO: Switch to stream
-            String decodedBody = new String(java.util.Base64.getUrlDecoder().decode(body), StandardCharsets.UTF_8);
+            String decodedBody = new String(Base64.getUrlDecoder().decode(body), StandardCharsets.UTF_8);
             JsonReader jsonBodyReader = _jsonReaderFactory.createReader(new StringReader(decodedBody));
 
             return jsonBodyReader.readObject();

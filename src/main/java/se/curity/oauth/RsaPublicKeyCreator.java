@@ -28,7 +28,7 @@ class RsaPublicKeyCreator
 {
     static PublicKey createPublicKey(String modulus, String exponent) throws InvalidKeySpecException, NoSuchAlgorithmException
     {
-        Base64.Decoder decoder = Base64.getDecoder();
+        Base64.Decoder decoder = Base64.getUrlDecoder();
         BigInteger bigModulus = new BigInteger(1, decoder.decode(modulus));
         BigInteger bigExponent = new BigInteger(1, decoder.decode(exponent));
         RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(bigModulus, bigExponent);

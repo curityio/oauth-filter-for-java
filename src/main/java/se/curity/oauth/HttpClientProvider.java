@@ -23,7 +23,7 @@ import java.util.ServiceLoader;
 
 public abstract class HttpClientProvider
 {
-    HttpClientProvider()
+    public HttpClientProvider()
     {
     }
 

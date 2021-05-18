@@ -59,20 +59,13 @@ clientSecret               | Your application's client secret.
 
 ## Providing an external HttpClient
 
-The `OAuthFilter` uses a [HttpClient](https://hc.apache.org/httpcomponents-client-ga/) to communicate with the authentication server. The HttpClient may be overridden by the web application by providing a properties file in the following locations:
+The `OAuthFilter` uses an [HttpClient](https://hc.apache.org/httpcomponents-client-ga/) to communicate with the authentication server. The HttpClient may be overridden by the web application by defining a service Provider class in this location:
 
-* `META-INF/services/OAuthFilter.properties` relative to the classpath
-* `OAuthFilter.properties` relative to the working directory
+* `META-INF/services/se.curity.oauth.HttpClientProvider` relative to the classpath
 
-The only accepted property is the name of a supplier class to be used to provide the HttpClient instance:
+The file should contain the name of the class used as the provider, e.g. `com.example.HttpClientProvider`
 
-```properties
-openid.httpClientSupplier.className=com.example.HttpClientSupplier
-```
-
-(Replace `com.example.HttpClientSupplier` with the name of your own supplier class.)
-
-This class must be an instance of Java 8's `java.util.function.Supplier` interface, and it must provide a `org.apache.http.client.HttpClient`. It also must have a default constructor. See `se.curity.examples.oauth.DefaultJwkHttpClientSupplier` for an example. This will be used if no properties file is found.
+This class must extend the abstract class `se.curity.oauth.HttpClientProvider` and implement two methods which create an introspection client (implementation of `se.curity.oauth.IntrospectionClient`), and a web keys client (implementation of `se.curity.oauth.WebKeysClient`).
 
 ## More Information
 

@@ -16,6 +16,7 @@
 
 package se.curity.oauth;
 
+import javax.json.JsonString;
 import javax.json.JsonValue;
 import java.util.logging.Logger;
 
@@ -41,7 +42,7 @@ enum JsonWebKeyType
                     value, value.getValueType()));
         }
 
-        switch (value.toString())
+        switch (((JsonString) value).getString())
         {
             case "RSA":
                 return RSA;
