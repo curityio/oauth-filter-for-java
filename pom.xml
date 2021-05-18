@@ -21,7 +21,7 @@
     <groupId>io.curity</groupId>
     <artifactId>oauth-filter</artifactId>
     <name>OAuth API Filter</name>
-    <version>2.1.0</version>
+    <version>3.0.0</version>
 
     <organization>
         <name>Curity I/O AB</name>
