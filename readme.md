@@ -18,7 +18,7 @@ The filter is build to perform two tasks.
 1. Authenticate the caller by validating the incoming access token
 2. Authorize the operation by validating the scopes in the access token against the configured scopes
 
-The authorization is very basic, and in the default implementation only checks that all configured scopes are present in the token. A more advanced scenario could check the HTTP method, along with sub-paths in order to determine if the appropriate scope is present in the request. To change the default behavior, override the method `se.curity.oauth.OAuthFilter#authorize`.
+The authorization is very basic, and in the default implementation only checks that all configured scopes are present in the token. A more advanced scenario could check the HTTP method, along with sub-paths in order to determine if the appropriate scope is present in the request. To change the default behavior, override the method `io.curity.oauth.OAuthFilter#authorize`.
 
 ## Using Json Web Tokens (JWT)
 
@@ -61,11 +61,11 @@ clientSecret               | Your application's client secret.
 
 The `OAuthFilter` uses an [HttpClient](https://hc.apache.org/httpcomponents-client-ga/) to communicate with the authentication server. The HttpClient may be overridden by the web application by defining a service Provider class in this location:
 
-* `META-INF/services/se.curity.oauth.HttpClientProvider` relative to the classpath
+* `META-INF/services/io.curity.oauth.HttpClientProvider` relative to the classpath
 
 The file should contain the name of the class used as the provider, e.g. `com.example.HttpClientProvider`
 
-This class must extend the abstract class `se.curity.oauth.HttpClientProvider` and implement two methods which create an introspection client (implementation of `se.curity.oauth.IntrospectionClient`), and a web keys client (implementation of `se.curity.oauth.WebKeysClient`).
+This class must extend the abstract class `io.curity.oauth.HttpClientProvider` and implement two methods which create an introspection client (implementation of `io.curity.oauth.IntrospectionClient`), and a web keys client (implementation of `io.curity.oauth.WebKeysClient`).
 
 ## More Information
 
