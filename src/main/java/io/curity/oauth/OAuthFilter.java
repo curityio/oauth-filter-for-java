@@ -69,8 +69,8 @@ public abstract class OAuthFilter implements Filter
      * @param servletRequest The default servlet request
      * @param servletResponse The default servlet response
      * @param filterChain A filter chain to continue with after this filter is done
-     * @throws IOException
-     * @throws ServletException
+     * @throws IOException when response fails to send an error
+     * @throws ServletException when authentication fails for some exceptional reason
      */
     @Override
     public final void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
@@ -144,6 +144,7 @@ public abstract class OAuthFilter implements Filter
      * indicating to the client that authentication is required</p>
      *
      * @return The OAuth server's realm as string
+     * @throws UnavailableException when filter is not initialized
      */
     protected String getOAuthServerRealm() throws UnavailableException
     {
@@ -193,7 +194,7 @@ public abstract class OAuthFilter implements Filter
      * @param authenticatedUser the user that was authenticated
      * @return true if access is allowed
      */
-    protected boolean isAuthorized(AuthenticatedUser authenticatedUser) throws ServletException
+    protected boolean isAuthorized(AuthenticatedUser authenticatedUser)
     {
         List<String> requiredScopes = Arrays.asList(_scopes);
 

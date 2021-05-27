@@ -20,13 +20,43 @@
 
     <groupId>io.curity</groupId>
     <artifactId>oauth-filter</artifactId>
-    <name>OAuth API Filter</name>
     <version>3.0.0</version>
+    <name>OAuth API Filter</name>
+    <description>A Servlet Filter that authenticates and authorizes requests using OAuth access tokens of various kinds.</description>
+    <url>https://github.com/curityio/oauth-filter-for-java</url>
 
     <organization>
-        <name>Curity I/O AB</name>
+        <name>Curity AB</name>
         <url>https://curity.io</url>
     </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Travis Spencer</name>
+            <email>travis.spencer@curity.io</email>
+            <organization>Curity AB</organization>
+            <organizationUrl>https://curity.io</organizationUrl>
+        </developer>
+        <developer>
+            <name>Michal Trojanowski</name>
+            <email>michal.trojanowski@curity.io</email>
+            <organization>Curity AB</organization>
+            <organizationUrl>https://curity.io</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com:curityio/oauth-filter-for-java.git</connection>
+        <developerConnection>scm:git:ssh://github.com:curityio/oauth-filter-for-java.git</developerConnection>
+        <url>https://github.com/curityio/oauth-filter-for-java</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -196,16 +226,77 @@
         </dependencies>
     </dependencyManagement>
 
-    <distributionManagement>
-        <repository>
-            <id>customer-release-repo</id>
-            <name>Customer Release Repository</name>
-            <url>https://nexus.curity.se/nexus/content/repositories/customer-release-repo</url>
-        </repository>
-        <snapshotRepository>
-            <id>curity-snapshot-repo</id>
-            <name>Curity Snapshot Repository</name>
-            <url>https://nexus.curity.se/nexus/content/repositories/customer-snapshot-repo/</url>
-        </snapshotRepository>
-    </distributionManagement>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <source>8</source>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.8</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * A cache that expires it's entries after a given timeout
  * @param <K> The key
- * @param <V extends Expirable> A value that can expire
+ * @param <V> A value that can expire
  */
 public class ExpirationBasedCache<K, V extends Expirable>
 {

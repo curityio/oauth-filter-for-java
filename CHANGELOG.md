@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.0.0 (2021-05-18)
+## 3.0.0 (2021-05-27)
 
 Features:
     - Changed groupID to `io.curity` and package name to `io.curity.oauth`.
