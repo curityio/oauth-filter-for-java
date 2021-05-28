@@ -32,6 +32,26 @@ The authorization is very basic, and in the default implementation only checks t
 
 The abstract class `OAuthFilter` implements a simple authorize method, that validates the incoming scopes against the configured ones. It is simple to override this method in the implementing classes instead to perform more advanced authorization.
 
+## Installing the library
+
+The `oauth-filter` library is available on Maven Central since version 3.0.0. so you can easily include in your projects.
+
+For example, if you use Maven, add to your `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>io.curity</groupId>
+    <artifactId>oauth-filter</artifactId>
+    <version>3.0.0</version>
+</dependency>
+```
+
+or with Gradle, inlcude in `build.gradle`:
+
+```groovy
+implementation 'io.curity:oauth-filter:3.0.0'
+```
+
 ## Configuring the Filter
 
 To configure the filter, the following settings are required for each of the two concrete implementations, depending on the format of the token your OAuth server is using.
