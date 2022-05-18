@@ -22,12 +22,18 @@ import java.util.logging.Logger;
 
 enum JsonWebKeyType
 {
-    RSA,
-    EC,
-    OCT,
-    UNSPECIFIED;
+    RSA ("RSA"),
+    EC ("EC"),
+    OCT ("oct"),
+    OKP ("OKP"),
+    UNSPECIFIED ("UNSPECIFIED");
 
     private static final Logger _logger = Logger.getLogger(JsonWebKeyType.class.getName());
+    String name;
+
+    JsonWebKeyType(String name) {
+        this.name = name;
+    }
 
     static JsonWebKeyType from(JsonValue value)
     {
@@ -48,6 +54,8 @@ enum JsonWebKeyType
                 return RSA;
             case "EC":
                 return EC;
+            case "OKP":
+                return OKP;
             case "oct":
                 return OCT;
             default:

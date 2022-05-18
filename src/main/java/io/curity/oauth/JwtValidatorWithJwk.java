@@ -50,8 +50,18 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
 
             if (jsonWebKeyType != null)
             {
-                result = Optional.of(RsaPublicKeyCreator.createPublicKey(jsonWebKeyType.getModulus(),
-                        jsonWebKeyType.getExponent()));
+                switch (jsonWebKeyType.getKeyType()) {
+                    case RSA :
+                        result = Optional.of(RsaPublicKeyCreator.createPublicKey(jsonWebKeyType.getModulus(),
+                                jsonWebKeyType.getExponent()));
+                    break;
+                    case OKP :
+                    case EC :
+                    case OCT :
+                    default:
+                        throw new NoSuchAlgorithmException(String.format("Unsupported key type %s for key %s", jsonWebKeyType.getKeyType(), jsonWebKeyType.getKeyId()));
+                }
+
             }
         }
         catch (JsonWebKeyNotFoundException e)
