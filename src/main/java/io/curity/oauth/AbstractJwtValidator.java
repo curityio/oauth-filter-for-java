@@ -24,8 +24,11 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.interfaces.EdECPublicKey;
+import java.security.spec.EdECPublicKeySpec;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -123,16 +126,16 @@ abstract class AbstractJwtValidator implements JwtValidator
 
         if (canRecognizeAlg(algorithm))
         {
-            Optional<PublicKey> maybeKey = getPublicKey(jwtHeader);
+            Optional<PublicKey> signatureVerificationKey = getPublicKey(jwtHeader);
 
-            if (!maybeKey.isPresent())
+            if (!signatureVerificationKey.isPresent())
             {
                 _logger.warning("Received token but could not find matching key");
 
                 throw new UnknownSignatureVerificationKey();
             }
 
-            if (!verifySignature(headerAndPayload, jwtSignatureData, maybeKey.get()))
+            if (!verifySignature(algorithm, headerAndPayload, jwtSignatureData, signatureVerificationKey.get()))
             {
                 throw new InvalidSignatureException();
             }
@@ -172,11 +175,24 @@ abstract class AbstractJwtValidator implements JwtValidator
         return bytes;
     }
 
-    private boolean verifySignature(byte[] signingInput, byte[] signature, PublicKey publicKey)
+    private boolean verifySignature(String algorithm, byte[] signingInput, byte[] signature, PublicKey publicKey)
     {
         try
         {
-            Signature verifier = Signature.getInstance("SHA256withRSA");
+            Signature verifier;
+
+            switch (algorithm) {
+                case "RS256":
+                    verifier = Signature.getInstance("SHA256withRSA");
+                    break;
+                case "EdDSA": {
+                    String edDSACurveName = ((EdECPublicKey) publicKey).getParams().getName();
+                    verifier = Signature.getInstance(edDSACurveName);
+                }
+                    break;
+                default:
+                    throw new UnknownAlgorithmException(String.format("Unsupported signature algorithm '%s'", algorithm));
+            }
 
             verifier.initVerify(publicKey);
             verifier.update(signingInput);
@@ -191,7 +207,13 @@ abstract class AbstractJwtValidator implements JwtValidator
 
     private boolean canRecognizeAlg(String alg)
     {
-        return alg.equals("RS256");
+        switch (alg) {
+            case "RS256":
+            case "EdDSA":
+                return true;
+            default:
+                return false;
+        }
     }
 
     private JsonObject decodeJwtBody(String body)

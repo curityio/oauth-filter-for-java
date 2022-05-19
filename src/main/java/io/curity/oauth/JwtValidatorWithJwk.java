@@ -17,6 +17,7 @@
 package io.curity.oauth;
 
 import javax.json.JsonReaderFactory;
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -54,8 +55,14 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
                     case RSA :
                         result = Optional.of(RsaPublicKeyCreator.createPublicKey(jsonWebKeyType.getModulus(),
                                 jsonWebKeyType.getExponent()));
-                    break;
+                        break;
                     case OKP :
+                        if (isEdDSAKey(jsonWebKeyType)) {
+                            result = Optional.of(EdDSAPublicKeyCreator.createPublicKey(jsonWebKeyType.getEllipticalCurve(), jsonWebKeyType.getXCoordinate()));
+                        } else {
+                            throw new NoSuchAlgorithmException(String.format("Unsupported curve %s for key %s", jsonWebKeyType.getEllipticalCurve(), jsonWebKeyType.getKeyId()));
+                        }
+                        break;
                     case EC :
                     case OCT :
                     default:
@@ -75,6 +82,11 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
         }
 
         return result;
+    }
+
+    private boolean isEdDSAKey(JsonWebKey jsonWebKey) {
+        Optional<String> curve = Optional.of(jsonWebKey.getEllipticalCurve());
+        return curve.isPresent() && (curve.get().equals("Ed25519") || curve.get().equals("Ed448"));
     }
 
     @Override

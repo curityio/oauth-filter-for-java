@@ -27,14 +27,14 @@ final class JwtValidatorWithCert extends AbstractJwtValidator
 {
     private static final Logger _logger = Logger.getLogger(JwtValidatorWithCert.class.getName());
 
-    private final Map<String, RSAPublicKey> _keys;
+    private final Map<String, PublicKey> _keys;
 
-    JwtValidatorWithCert(String issuer, String audience, Map<String, RSAPublicKey> publicKeys)
+    JwtValidatorWithCert(String issuer, String audience, Map<String, PublicKey> publicKeys)
     {
         this(issuer, audience, publicKeys, JsonUtils.createDefaultReaderFactory());
     }
 
-    JwtValidatorWithCert(String issuer, String audience, Map<String, RSAPublicKey> publicKeys,
+    JwtValidatorWithCert(String issuer, String audience, Map<String, PublicKey> publicKeys,
                          JsonReaderFactory jsonReaderFactory)
     {
         super(issuer, audience, jsonReaderFactory);

@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
@@ -110,13 +111,13 @@ public class JwtWithCertTest
      * @return
      * @throws Exception
      */
-    private Map<String, RSAPublicKey> prepareKeyMap() throws Exception
+    private Map<String, PublicKey> prepareKeyMap() throws Exception
     {
-        Map<String, RSAPublicKey> keys = new HashMap<>();
+        Map<String, PublicKey> keys = new HashMap<>();
 
         Certificate cert = getCertificate();
 
-        RSAPublicKey key = (RSAPublicKey)cert.getPublicKey();
+        PublicKey key = (PublicKey)cert.getPublicKey();
 
         byte[] x5tS256 = DigestUtils.sha256(cert.getEncoded());
         String b64x5tS256 = org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString(x5tS256);
