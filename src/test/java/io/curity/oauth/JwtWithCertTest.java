@@ -34,6 +34,7 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.security.interfaces.EdECPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,11 +79,21 @@ public class JwtWithCertTest
         PrivateKey key = getPrivateKey();
         Certificate cert = getCertificate();
 
-        JwtTokenIssuer issuer = new JwtTokenIssuer(ISSUER, _algorithm, key, cert);
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put(EXTRA_CLAIM, EXTRA_CLAIM_VALUE);
-
-        _testToken = issuer.issueToken(SUBJECT, AUDIENCE, EXPIRATION, attributes);
+        if (!_algorithm.equals("EdDSA")) {
+            // Create test token on the fly
+            JwtTokenIssuer issuer = new JwtTokenIssuer(ISSUER, _algorithm, key, cert);
+            Map<String, Object> attributes = new HashMap<>();
+            attributes.put(EXTRA_CLAIM, EXTRA_CLAIM_VALUE);
+            _testToken = issuer.issueToken(SUBJECT, AUDIENCE, EXPIRATION, attributes);
+        } else {
+            // Use hardcoded values until jose4j supports EdDSA
+            String curveName = ((EdECPrivateKey) key).getParams().getName();
+            if ("Ed25519".equals(curveName)) {
+                _testToken ="eyJraWQiOiItMTkwOTU3MjI1NyIsIng1dCI6IlNIZDRIQ1VkQThISlZHTTJVV3o1Tm1JUFRHMCIsIng1dCNTMjU2IjoiS0lZVnBHXzVXSnh0ZUdOUTVLR043M0xlQWNHS0w4MmMyWFhaR0M5RUNKVSIsImFsZyI6IkVkRFNBIn0.eyJqdGkiOiJlMzE2YjBmOS1mN2JlLTQ3M2QtOGMzNi05NGMwNzRlMjMzNjEiLCJkZWxlZ2F0aW9uSWQiOiIzZDE2NzM5Ni02NGEzLTQ2MmYtOGMyZS02MzdhYzM0NzdkMTMiLCJleHAiOjE5Njg0MDkwNzMsIm5iZiI6MTY1MzA0OTA3Mywic2NvcGUiOiJyZWFkIG9wZW5pZCIsImlzcyI6InRlc3Q6aXNzdWVyIiwic3ViIjoidGVzdHN1YmplY3QiLCJhdWQiOiJmb286YXVkaWVuY2UiLCJpYXQiOjE2NTMwNDkwNzMsInB1cnBvc2UiOiJhY2Nlc3NfdG9rZW4iLCJURVNUX0tFWSI6IlRFU1RfVkFMVUUifQ.NGWCDwzCPOx50-WBJRqKFvPy2562rqFjNS3Q9zmJqNhdxtZK3s7g7JWtgI_AwnJBnaPeC1ATMYyxKjionwzQAA";
+            } else {
+                _testToken ="eyJraWQiOiIxNzE2OTk5OTA0IiwieDV0IjoiMUlSVEJMTFFlaUwyWVpMQjFWRER2Q1RHb3pjIiwieDV0I1MyNTYiOiJTbGVDbTlwRVI5a2ZiTjBYeGlqa1g4MmdyR0hUYXhOTkNCRHNUMHR1M3lBIiwiYWxnIjoiRWREU0EifQ.eyJqdGkiOiIyNjNiNmM2OS02NTExLTQ5YjktYWVlYi0yY2JkOGMyMGE3NGUiLCJkZWxlZ2F0aW9uSWQiOiIwY2NjZmMyZi1mY2EzLTRlOGQtOTgxYy05ZjU5MzIyNmYyNTEiLCJleHAiOjE5Njg0MDg5NzUsIm5iZiI6MTY1MzA0ODk3NSwic2NvcGUiOiJyZWFkIG9wZW5pZCIsImlzcyI6InRlc3Q6aXNzdWVyIiwic3ViIjoidGVzdHN1YmplY3QiLCJhdWQiOiJmb286YXVkaWVuY2UiLCJpYXQiOjE2NTMwNDg5NzUsInB1cnBvc2UiOiJhY2Nlc3NfdG9rZW4iLCJURVNUX0tFWSI6IlRFU1RfVkFMVUUifQ.2gcRnLTFnCsdkElgcecSjxvrKA3bKAFuUf5vhVapdLqxZvx6E1BblTzjaVjqy3OT0OzdN3p1q5kApJ5EjVUT0tdjHVxZMBtkosviYM5EL2UkJO_T3tA-on7h0lfcufxnhd_TUOlM_YTkJxFGSkOtLg4A";
+            }
+        }
     }
 
     @Test
