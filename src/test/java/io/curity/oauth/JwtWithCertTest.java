@@ -21,6 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import javax.json.JsonObject;
 import javax.json.JsonString;
@@ -40,6 +42,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
+@RunWith(Parameterized.class)
 public class JwtWithCertTest
 {
     private static final Logger _logger = LogManager.getLogger(JwtWithCertTest.class);
@@ -52,11 +55,20 @@ public class JwtWithCertTest
     private final String EXTRA_CLAIM_VALUE = "TEST_VALUE";
 
     private final String PATH_TO_KEY = "/Se.Curity.Test.p12";
-    private final String KEY_ALIAS = "se.curity.test";
     private final String KEY_PWD = "Password1";
     
     private String _testToken;
     private KeyStore _keyStore;
+
+    @Parameterized.Parameter(0)
+    public String _keyAlias;
+    @Parameterized.Parameter(1)
+    public String _algorithm;
+
+    @Parameterized.Parameters
+    public static Object[] keysToTest() {
+        return new Object[][] { {"se.curity.test", "RS256"} };
+    }
 
     @Before
     public void before() throws Exception
@@ -66,7 +78,7 @@ public class JwtWithCertTest
         PrivateKey key = getPrivateKey();
         Certificate cert = getCertificate();
 
-        JwtTokenIssuer issuer = new JwtTokenIssuer(ISSUER, key, cert);
+        JwtTokenIssuer issuer = new JwtTokenIssuer(ISSUER, _algorithm, key, cert);
         Map<String, Object> attributes = new HashMap<>();
         attributes.put(EXTRA_CLAIM, EXTRA_CLAIM_VALUE);
 
@@ -145,13 +157,13 @@ public class JwtWithCertTest
     private PrivateKey getPrivateKey()
             throws Exception
     {
-        return (PrivateKey)this._keyStore.getKey(KEY_ALIAS, KEY_PWD.toCharArray());
+        return (PrivateKey)this._keyStore.getKey(_keyAlias, KEY_PWD.toCharArray());
 
     }
 
     private Certificate getCertificate() throws Exception {
         //Get key by alias (found in the p12 file using:
         //keytool -list -keystore test-root-ca.p12 -storepass foobar -storetype PKCS12
-        return (Certificate)this._keyStore.getCertificate(KEY_ALIAS);
+        return (Certificate)this._keyStore.getCertificate(_keyAlias);
     }
 }
