@@ -20,7 +20,7 @@
 
     <groupId>io.curity</groupId>
     <artifactId>oauth-filter</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.0</version>
     <name>OAuth API Filter</name>
     <description>A Servlet Filter that authenticates and authorizes requests using OAuth access tokens of various kinds.</description>
     <url>https://github.com/curityio/oauth-filter-for-java</url>
@@ -47,6 +47,12 @@
         <developer>
             <name>Michal Trojanowski</name>
             <email>michal.trojanowski@curity.io</email>
+            <organization>Curity AB</organization>
+            <organizationUrl>https://curity.io</organizationUrl>
+        </developer>
+        <developer>
+            <name>Judith Kahrer</name>
+            <email>judith.kahrer@curity.io</email>
             <organization>Curity AB</organization>
             <organizationUrl>https://curity.io</organizationUrl>
         </developer>
