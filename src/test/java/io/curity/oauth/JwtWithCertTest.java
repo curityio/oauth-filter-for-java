@@ -31,16 +31,16 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.interfaces.EdECPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -61,8 +61,9 @@ public class JwtWithCertTest
     private String _testToken;
     private KeyStore _keyStore;
 
-    @Parameterized.Parameter(0)
+    @Parameterized.Parameter()
     public String _keyAlias;
+
     @Parameterized.Parameter(1)
     public String _algorithm;
 
@@ -131,8 +132,8 @@ public class JwtWithCertTest
     /**
      * Load the private Keymap with the x5t256 thumbprint and the public key
      * The map only contains a single key
-     * @return
-     * @throws Exception
+     * @return a map with a single entry of a certificate thumbprint and the corresponding public key
+     * @throws Exception When key could not be loaded from certificate
      */
     private Map<String, PublicKey> prepareKeyMap() throws Exception
     {
@@ -140,7 +141,7 @@ public class JwtWithCertTest
 
         Certificate cert = getCertificate();
 
-        PublicKey key = (PublicKey)cert.getPublicKey();
+        PublicKey key = cert.getPublicKey();
 
         byte[] x5tS256 = DigestUtils.sha256(cert.getEncoded());
         String b64x5tS256 = org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString(x5tS256);
@@ -154,6 +155,7 @@ public class JwtWithCertTest
             throws Exception
     {
         URL url = getClass().getResource(PATH_TO_KEY);
+        assert url != null;
         File certFile = new File(url.getFile());
 
         InputStream keyIS = new FileInputStream(certFile);
@@ -172,9 +174,9 @@ public class JwtWithCertTest
 
     }
 
-    private Certificate getCertificate() throws Exception {
+    private Certificate getCertificate() throws KeyStoreException {
         //Get key by alias (found in the p12 file using:
         //keytool -list -keystore test-root-ca.p12 -storepass foobar -storetype PKCS12
-        return (Certificate)this._keyStore.getCertificate(_keyAlias);
+        return this._keyStore.getCertificate(_keyAlias);
     }
 }
