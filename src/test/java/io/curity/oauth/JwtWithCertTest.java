@@ -67,7 +67,7 @@ public class JwtWithCertTest
 
     @Parameterized.Parameters
     public static Object[] keysToTest() {
-        return new Object[][] { {"se.curity.test", "RS256"} };
+        return new Object[][] { {"se.curity.test", "RS256"}, {"se.curity.test.ed25519", "EdDSA"}, {"se.curity.test.ed448", "EdDSA"} };
     }
 
     @Before
