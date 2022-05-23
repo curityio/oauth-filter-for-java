@@ -58,7 +58,7 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
                         break;
                     case OKP :
                         if (isEdDSAKey(jsonWebKeyType)) {
-                            result = Optional.of(EdDSAPublicKeyCreator.createPublicKey(jsonWebKeyType.getEllipticalCurve(), jsonWebKeyType.getXCoordinate()));
+                            result = Optional.of(EdDSAPublicKeyCreator.createPublicKey(jsonWebKeyType.getXCoordinate()));
                         } else {
                             throw new NoSuchAlgorithmException(String.format("Unsupported curve %s for key %s", jsonWebKeyType.getEllipticalCurve(), jsonWebKeyType.getKeyId()));
                         }
