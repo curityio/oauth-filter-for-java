@@ -16,14 +16,12 @@
 
 package io.curity.oauth;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.Mock;
 
 import javax.json.JsonObject;
 import javax.json.JsonReaderFactory;
@@ -36,7 +34,6 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.interfaces.EdECPrivateKey;
 import java.util.Collections;
@@ -109,7 +106,6 @@ public class JwtWithJwksTest
     @Test
     public void testFindAndValidateWithOneJwk() throws Exception
     {
-        //JwtValidator validator = new JwtValidatorWithCert(ISSUER, AUDIENCE, prepareKeyMap());
         JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(Collections.emptyMap());
         WebKeysClient webKeysClient = mock(WebKeysClient.class);
 
@@ -125,7 +121,6 @@ public class JwtWithJwksTest
     @Test
     public void testValidContentInToken() throws Exception
     {
-        //JwtValidator validator = new JwtValidatorWithCert(ISSUER, AUDIENCE, prepareKeyMap());
         JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(Collections.emptyMap());
         WebKeysClient webKeysClient = mock(WebKeysClient.class);
 
