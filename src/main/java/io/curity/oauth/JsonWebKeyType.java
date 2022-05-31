@@ -20,13 +20,12 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import java.util.logging.Logger;
 
-enum JsonWebKeyType
-{
-    RSA ("RSA"),
-    EC ("EC"),
-    OCT ("oct"),
-    OKP ("OKP"),
-    UNSPECIFIED ("UNSPECIFIED");
+enum JsonWebKeyType {
+    EC("EC"),
+    OCT("oct"),
+    OKP("OKP"),
+    RSA("RSA"),
+    UNSPECIFIED("UNSPECIFIED");
 
     private static final Logger _logger = Logger.getLogger(JsonWebKeyType.class.getName());
     String name;
@@ -35,21 +34,17 @@ enum JsonWebKeyType
         this.name = name;
     }
 
-    static JsonWebKeyType from(JsonValue value)
-    {
-        if (value == null || value.toString().length() == 0)
-        {
+    static JsonWebKeyType from(JsonValue value) {
+        if (value == null || value.toString().length() == 0) {
             return UNSPECIFIED;
         }
 
-        if (value.getValueType() != JsonValue.ValueType.STRING)
-        {
+        if (value.getValueType() != JsonValue.ValueType.STRING) {
             _logger.warning(() -> String.format("Value '%s' is not a string, as required; it is %s",
                     value, value.getValueType()));
         }
 
-        switch (((JsonString) value).getString())
-        {
+        switch (((JsonString) value).getString()) {
             case "RSA":
                 return RSA;
             case "EC":

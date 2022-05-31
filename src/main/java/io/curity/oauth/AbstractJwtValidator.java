@@ -66,7 +66,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         byte[] jwtSignature = Base64.getUrlDecoder().decode(jwtParts[2]);
         byte[] headerAndPayload = convertToBytes(jwtParts[0] + "." + jwtParts[1]);
 
-        validateSignature(jwtHeader, jwtBody, jwtSignature, headerAndPayload);
+        validateSignature(jwtHeader, jwtSignature, headerAndPayload);
 
         try
         {
@@ -111,7 +111,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         return new JsonData(jwtBody);
     }
 
-    private void validateSignature(JwtHeader jwtHeader, JsonObject jwtBody, byte[] jwtSignatureData,
+    private void validateSignature(JwtHeader jwtHeader, byte[] jwtSignatureData,
                                    byte[] headerAndPayload)
             throws TokenValidationException
     {
@@ -126,7 +126,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         {
             Optional<PublicKey> signatureVerificationKey = getPublicKey(jwtHeader);
 
-            if (!signatureVerificationKey.isPresent())
+            if (signatureVerificationKey.isEmpty())
             {
                 _logger.warning("Received token but could not find matching key");
 
@@ -161,7 +161,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         for (int i = 0; i < input.length(); i++)
         {
             //Convert and treat as ascii.
-            int integer = (int) input.charAt(i);
+            int integer = input.charAt(i);
 
             //Since byte is signed in Java we cannot use normal conversion
             //but must drop it into a byte array and truncate.
@@ -177,20 +177,11 @@ abstract class AbstractJwtValidator implements JwtValidator
     {
         try
         {
-            Signature verifier;
-
-            switch (algorithm) {
-                case "RS256":
-                    verifier = Signature.getInstance("SHA256withRSA");
-                    break;
-                case "EdDSA": {
-                    String edDSACurveName = ((EdECPublicKey) publicKey).getParams().getName();
-                    verifier = Signature.getInstance(edDSACurveName);
-                }
-                    break;
-                default:
-                    throw new UnknownAlgorithmException(String.format("Unsupported signature algorithm '%s'", algorithm));
-            }
+            Signature verifier = switch (algorithm) {
+                case "RS256" -> Signature.getInstance("SHA256withRSA");
+                case "EdDSA" -> Signature.getInstance(((EdECPublicKey) publicKey).getParams().getName());
+                default -> throw new UnknownAlgorithmException(String.format("Unsupported signature algorithm '%s'", algorithm));
+            };
 
             verifier.initVerify(publicKey);
             verifier.update(signingInput);
@@ -205,13 +196,10 @@ abstract class AbstractJwtValidator implements JwtValidator
 
     private boolean canRecognizeAlg(String alg)
     {
-        switch (alg) {
-            case "RS256":
-            case "EdDSA":
-                return true;
-            default:
-                return false;
-        }
+        return switch (alg) {
+            case "RS256", "EdDSA" -> true;
+            default -> false;
+        };
     }
 
     private JsonObject decodeJwtBody(String body)

@@ -8,13 +8,9 @@ import java.security.spec.EdECPoint;
 import java.security.spec.EdECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.NamedParameterSpec;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
 
-public class EdDSAPublicKeyCreator {
+final class EdDSAPublicKeyCreator {
 
     static PublicKey createPublicKey(String curveName, String publicKeyJwt) throws InvalidKeySpecException, NoSuchAlgorithmException
     {
@@ -29,7 +25,6 @@ public class EdDSAPublicKeyCreator {
         // Byte array is in little endian encoding, the most significant bit in final octet indicates if X is negative or not:
         // https://www.rfc-editor.org/rfc/rfc8032.html#section-3.1
         // https://www.rfc-editor.org/rfc/rfc8032.html#section-5.1.2
-        // https://www.rfc-editor.org/rfc/rfc8032.html#section-3.1
         boolean XIsNegative = (publicKeyBytes[b-1] & 0x80) != 0;
         // Recover y value by clearing x-bit.
         publicKeyBytes[b-1] = (byte)(publicKeyBytes[b-1] & 0x7f);

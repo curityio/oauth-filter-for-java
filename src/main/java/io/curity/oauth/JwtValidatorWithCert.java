@@ -18,7 +18,6 @@ package io.curity.oauth;
 
 import javax.json.JsonReaderFactory;
 import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
