@@ -16,8 +16,8 @@
 
 package io.curity.oauth;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.UnavailableException;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.UnavailableException;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -18,7 +18,7 @@ package io.curity.oauth;
 
 import org.junit.Test;
 
-import javax.servlet.UnavailableException;
+import jakarta.servlet.UnavailableException;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.instanceOf;

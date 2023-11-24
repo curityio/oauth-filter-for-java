@@ -3,7 +3,7 @@
 [![Quality](https://img.shields.io/badge/quality-test-yellow)](https://curity.io/resources/code-examples/status/)
 [![Availability](https://img.shields.io/badge/availability-source-blue)](https://curity.io/resources/code-examples/status/)
 
-This project contains a Servlet Filter that authenticates and authorizes requests using OAuth access tokens of various kinds. There are two `OAuthFilter` implementations. `OAuthJwtFilter` and `OAuthOpaqueFilter`. Both implement `javax.servlet.Filter`, and can be used to protect APIs built using Java. Depending on the format of the access token, these two concrete implementations can be used in the following manner:
+This project contains a Servlet Filter that authenticates and authorizes requests using OAuth access tokens of various kinds. There are two `OAuthFilter` implementations. `OAuthJwtFilter` and `OAuthOpaqueFilter`. Both implement `jakarta.servlet.Filter`, and can be used to protect APIs built using Java. Depending on the format of the access token, these two concrete implementations can be used in the following manner:
 
 1. If the token is a Json Web Token (JWT) then validate the token using a public key
 2. If the token is a reference (opaque) token, then validate by calling the OAuth server's

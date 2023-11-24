@@ -20,7 +20,7 @@
 
     <groupId>io.curity</groupId>
     <artifactId>oauth-filter</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.0</version>
     <name>OAuth API Filter</name>
     <description>A Servlet Filter that authenticates and authorizes requests using OAuth access tokens of various kinds.</description>
     <url>https://github.com/curityio/oauth-filter-for-java</url>
@@ -121,8 +121,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
         </dependency>
         <dependency>
             <groupId>javax.json</groupId>

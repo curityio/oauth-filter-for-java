@@ -18,9 +18,9 @@ package io.curity.oauth;
 
 import javax.json.JsonReaderFactory;
 import javax.json.spi.JsonProvider;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.UnavailableException;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.UnavailableException;
 import java.util.Map;
 import java.util.logging.Logger;
 

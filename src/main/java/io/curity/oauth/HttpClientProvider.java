@@ -16,7 +16,7 @@
 
 package io.curity.oauth;
 
-import javax.servlet.UnavailableException;
+import jakarta.servlet.UnavailableException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;

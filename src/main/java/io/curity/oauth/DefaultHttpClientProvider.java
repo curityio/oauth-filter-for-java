@@ -19,7 +19,7 @@ package io.curity.oauth;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import javax.servlet.UnavailableException;
+import jakarta.servlet.UnavailableException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
