@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.interfaces.EdECPublicKey;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HashMap;
@@ -65,7 +66,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         byte[] jwtSignature = Base64.getUrlDecoder().decode(jwtParts[2]);
         byte[] headerAndPayload = convertToBytes(jwtParts[0] + "." + jwtParts[1]);
 
-        validateSignature(jwtHeader, jwtBody, jwtSignature, headerAndPayload);
+        validateSignature(jwtHeader, jwtSignature, headerAndPayload);
 
         try
         {
@@ -110,7 +111,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         return new JsonData(jwtBody);
     }
 
-    private void validateSignature(JwtHeader jwtHeader, JsonObject jwtBody, byte[] jwtSignatureData,
+    private void validateSignature(JwtHeader jwtHeader, byte[] jwtSignatureData,
                                    byte[] headerAndPayload)
             throws TokenValidationException
     {
@@ -123,16 +124,16 @@ abstract class AbstractJwtValidator implements JwtValidator
 
         if (canRecognizeAlg(algorithm))
         {
-            Optional<PublicKey> maybeKey = getPublicKey(jwtHeader);
+            Optional<PublicKey> signatureVerificationKey = getPublicKey(jwtHeader);
 
-            if (!maybeKey.isPresent())
+            if (signatureVerificationKey.isEmpty())
             {
                 _logger.warning("Received token but could not find matching key");
 
                 throw new UnknownSignatureVerificationKey();
             }
 
-            if (!verifySignature(headerAndPayload, jwtSignatureData, maybeKey.get()))
+            if (!verifySignature(algorithm, headerAndPayload, jwtSignatureData, signatureVerificationKey.get()))
             {
                 throw new InvalidSignatureException();
             }
@@ -160,7 +161,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         for (int i = 0; i < input.length(); i++)
         {
             //Convert and treat as ascii.
-            int integer = (int) input.charAt(i);
+            int integer = input.charAt(i);
 
             //Since byte is signed in Java we cannot use normal conversion
             //but must drop it into a byte array and truncate.
@@ -172,11 +173,15 @@ abstract class AbstractJwtValidator implements JwtValidator
         return bytes;
     }
 
-    private boolean verifySignature(byte[] signingInput, byte[] signature, PublicKey publicKey)
+    private boolean verifySignature(String algorithm, byte[] signingInput, byte[] signature, PublicKey publicKey)
     {
         try
         {
-            Signature verifier = Signature.getInstance("SHA256withRSA");
+            Signature verifier = switch (algorithm) {
+                case "RS256" -> Signature.getInstance("SHA256withRSA");
+                case "EdDSA" -> Signature.getInstance(((EdECPublicKey) publicKey).getParams().getName());
+                default -> throw new UnknownAlgorithmException(String.format("Unsupported signature algorithm '%s'", algorithm));
+            };
 
             verifier.initVerify(publicKey);
             verifier.update(signingInput);
@@ -191,7 +196,10 @@ abstract class AbstractJwtValidator implements JwtValidator
 
     private boolean canRecognizeAlg(String alg)
     {
-        return alg.equals("RS256");
+        return switch (alg) {
+            case "RS256", "EdDSA" -> true;
+            default -> false;
+        };
     }
 
     private JsonObject decodeJwtBody(String body)

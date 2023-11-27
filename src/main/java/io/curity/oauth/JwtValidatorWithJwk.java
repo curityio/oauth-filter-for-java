@@ -48,10 +48,22 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
         {
             JsonWebKey jsonWebKeyType = _jwkManager.getJsonWebKeyForKeyId(jwtHeader.getKeyId());
 
-            if (jsonWebKeyType != null)
-            {
-                result = Optional.of(RsaPublicKeyCreator.createPublicKey(jsonWebKeyType.getModulus(),
-                        jsonWebKeyType.getExponent()));
+            switch (jsonWebKeyType.getKeyType()) {
+                case RSA :
+                    result = Optional.of(RsaPublicKeyCreator.createPublicKey(jsonWebKeyType.getModulus(),
+                            jsonWebKeyType.getExponent()));
+                    break;
+                case OKP :
+                    if (isEdDSAKey(jsonWebKeyType)) {
+                        result = Optional.of(EdDSAPublicKeyCreator.createPublicKey(jsonWebKeyType.getEllipticalCurve(), jsonWebKeyType.getXCoordinate()));
+                    } else {
+                        throw new NoSuchAlgorithmException(String.format("Unsupported curve %s for key %s", jsonWebKeyType.getEllipticalCurve(), jsonWebKeyType.getKeyId()));
+                    }
+                    break;
+                case EC :
+                case OCT :
+                default:
+                    throw new NoSuchAlgorithmException(String.format("Unsupported key type %s for key %s", jsonWebKeyType.getKeyType(), jsonWebKeyType.getKeyId()));
             }
         }
         catch (JsonWebKeyNotFoundException e)
@@ -65,6 +77,11 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
         }
 
         return result;
+    }
+
+    private boolean isEdDSAKey(JsonWebKey jsonWebKey) {
+        String curve = jsonWebKey.getEllipticalCurve();
+        return curve != null && (curve.equals("Ed25519") || curve.equals("Ed448"));
     }
 
     @Override
