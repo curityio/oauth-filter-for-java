@@ -42,14 +42,14 @@ For example, if you use Maven, add to your `pom.xml`:
 <dependency>
     <groupId>io.curity</groupId>
     <artifactId>oauth-filter</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.0</version>
 </dependency>
 ```
 
 or with Gradle, inlcude in `build.gradle`:
 
 ```groovy
-implementation 'io.curity:oauth-filter:3.0.0'
+implementation 'io.curity:oauth-filter:4.0.0'
 ```
 
 ## Configuring the Filter
@@ -91,4 +91,4 @@ This class must extend the abstract class `io.curity.oauth.HttpClientProvider` a
 
 For more information, please contact [Curity](http://curity.io).
 
-Copyright (C) 2016-2017 Curity AB. All rights reserved
+Copyright (C) 2016-2022 Curity AB. All rights reserved

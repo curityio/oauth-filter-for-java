@@ -16,7 +16,6 @@
 
 package io.curity.oauth;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
@@ -25,7 +24,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import javax.json.JsonObject;
+import javax.json.JsonReaderFactory;
 import javax.json.JsonString;
+import javax.json.spi.JsonProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -33,20 +34,22 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.interfaces.EdECPrivateKey;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(Parameterized.class)
-public class JwtWithCertTest
+public class JwtWithJwksTest
 {
-    private static final Logger _logger = LogManager.getLogger(JwtWithCertTest.class);
+    private static final Logger _logger = LogManager.getLogger(JwtWithJwksTest.class);
 
     private final String SUBJECT = "testsubject";
     private final String AUDIENCE = "foo:audience";
@@ -55,9 +58,10 @@ public class JwtWithCertTest
     private final String EXTRA_CLAIM = "TEST_KEY";
     private final String EXTRA_CLAIM_VALUE = "TEST_VALUE";
 
+    // Used for signing tokens
     private final String PATH_TO_KEY = "/Se.Curity.Test.p12";
     private final String KEY_PWD = "Password1";
-    
+
     private String _testToken;
     private KeyStore _keyStore;
 
@@ -67,9 +71,12 @@ public class JwtWithCertTest
     @Parameterized.Parameter(1)
     public String _algorithm;
 
+    @Parameterized.Parameter(2)
+    public String _keyId;
+
     @Parameterized.Parameters
     public static Object[] keysToTest() {
-        return new Object[][] { {"se.curity.test", "RS256"}, {"se.curity.test.ed25519", "EdDSA"}, {"se.curity.test.ed448", "EdDSA"} };
+        return new Object[][] { {"se.curity.test", "RS256", "-38074812"}, {"se.curity.test.ed25519", "EdDSA", "-1909572257"}, {"se.curity.test.ed448", "EdDSA", "1716999904"} };
     }
 
     @Before
@@ -78,11 +85,10 @@ public class JwtWithCertTest
         loadKeyStore();
 
         PrivateKey key = getPrivateKey();
-        Certificate cert = getCertificate();
 
         if (!_algorithm.equals("EdDSA")) {
             // Create test token on the fly
-            JwtTokenIssuer issuer = new JwtTokenIssuer(ISSUER, _algorithm, key, cert);
+            JwtTokenIssuer issuer = new JwtTokenIssuer(ISSUER, _algorithm, key, _keyId);
             Map<String, Object> attributes = new HashMap<>();
             attributes.put(EXTRA_CLAIM, EXTRA_CLAIM_VALUE);
             _testToken = issuer.issueToken(SUBJECT, AUDIENCE, EXPIRATION, attributes);
@@ -98,10 +104,13 @@ public class JwtWithCertTest
     }
 
     @Test
-    public void testFindAndValidateWithOneCert() throws Exception
+    public void testFindAndValidateWithOneJwk() throws Exception
     {
-        JwtValidator validator = new JwtValidatorWithCert(ISSUER, AUDIENCE, prepareKeyMap());
+        JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(Collections.emptyMap());
+        WebKeysClient webKeysClient = mock(WebKeysClient.class);
 
+        JwtValidatorWithJwk validator = new JwtValidatorWithJwk(0, webKeysClient, AUDIENCE, ISSUER,jsonReaderFactory);
+        when(webKeysClient.getKeys()).thenReturn(prepareKeyMap().get(_keyId));
         _logger.info("test token = {}", _testToken);
 
         JsonData validatedToken = validator.validate(_testToken);
@@ -112,7 +121,12 @@ public class JwtWithCertTest
     @Test
     public void testValidContentInToken() throws Exception
     {
-        JwtValidator validator = new JwtValidatorWithCert(ISSUER, AUDIENCE, prepareKeyMap());
+        JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(Collections.emptyMap());
+        WebKeysClient webKeysClient = mock(WebKeysClient.class);
+
+        JwtValidatorWithJwk validator = new JwtValidatorWithJwk(0, webKeysClient, AUDIENCE, ISSUER,jsonReaderFactory);
+        when(webKeysClient.getKeys()).thenReturn(prepareKeyMap().get(_keyId));
+        _logger.info("test token = {}", _testToken);
 
         JsonData result = validator.validate(_testToken);
 
@@ -130,24 +144,17 @@ public class JwtWithCertTest
     }
 
     /**
-     * Load the private Keymap with the x5t256 thumbprint and the public key
+     * Load the private keymap with the kid and the jwks
      * The map only contains a single key
-     * @return a map with a single entry of a certificate thumbprint and the corresponding public key
-     * @throws Exception When key could not be loaded from certificate
+     * @return a map with a single entry representing a JWKS that contains the key with the keyid
      */
-    private Map<String, PublicKey> prepareKeyMap() throws Exception
+    private Map<String, String> prepareKeyMap()
     {
-        Map<String, PublicKey> keys = new HashMap<>();
+        Map<String, String> keys = new HashMap<>();
 
-        Certificate cert = getCertificate();
-
-        PublicKey key = cert.getPublicKey();
-
-        byte[] x5tS256 = DigestUtils.sha256(cert.getEncoded());
-        String b64x5tS256 = org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString(x5tS256);
-
-        keys.put(b64x5tS256, key);
-
+        keys.put("-38074812","{\"keys\":[{\"kty\":\"RSA\",\"kid\":\"-38074812\",\"use\":\"sig\",\"alg\":\"RS256\",\"n\":\"yMAHZiIfbAgmZJ-_4Gj-wdS8rvaKNBbnHz_krmd-kkX51bA1EsUc0CN672-xnUb_-E_-u_GoWhJzdjiBuz9XasSfQK8WyAwbc7MLkw40A7Zxl2sfsxGTod3qi1u8mjguoc9CbVqPdYe_9YPVxoK4CeJz6V8AsPcxVJxYq6os1rI9qFx_6a1JdQEhetGtkHLFvwo80UTzKXKhGXSu96WrXnkDE8Kw5TSKvh2gI_BX4QHXjE82xldJRJ8QIXGpRNbdyzGkUdjsrhmZl3ARC9IUlxmowkcEEIzjfbOKBVGrVcJ7rHb0GYNaKtMB_MlH1uAPDxl6qKeXOAZ8YEZ1r0ToPw\",\"e\":\"AQAB\",\"x5t\":\"MR-pGTa866RdZLjN6Vwrfay907g\"}]}");
+        keys.put("-1909572257", "{\"keys\":[{\"kty\":\"OKP\",\"kid\":\"-1909572257\",\"use\":\"sig\",\"alg\":\"EdDSA\",\"crv\":\"Ed25519\",\"x\":\"XWxGtApfcqmKI7p0OKnF5JSEWMVoLsytFXLEP7xZ_l8\",\"x5t\":\"SHd4HCUdA8HJVGM2UWz5NmIPTG0\"}]}");
+        keys.put("1716999904","{\"keys\":[{\"kty\":\"OKP\",\"kid\":\"1716999904\",\"use\":\"sig\",\"alg\":\"EdDSA\",\"crv\":\"Ed448\",\"x\":\"lDc565Rydl9MUCoOB9JpGV3pUSHm7FvuiuEMvrvRkS7PeYL41rPU6s2rMdLeHiXfSxvR1veh4C0A\",\"x5t\":\"1IRTBLLQeiL2YZLB1VDDvCTGozc\"}]}");
         return keys;
     }
 
