@@ -41,7 +41,6 @@ public class TimeBasedCacheTest
         // then 4 seconds later, then 8 seconds later.
         Clock fakeClock = mock(Clock.class);
         Instant now = Instant.now();
-        when(fakeClock.millis()).thenCallRealMethod();
         when(fakeClock.instant()).thenReturn(
                 now, // get("0") - first map loading
                 now, // cache asks when the latest loading happened
@@ -49,12 +48,8 @@ public class TimeBasedCacheTest
                 // get("0") - should not even ask about the time as entry was found
                 now.plus(Duration.ofSeconds(4)), // get("1") - no reloading
                 now.plus(Duration.ofSeconds(8))); // get("1") - reload
-
         @SuppressWarnings("unchecked")
         Supplier<Map> fakeSupplier = mock(Supplier.class);
-        when(fakeSupplier.get()).thenReturn(
-                Collections.singletonMap("0", 0),
-                Collections.singletonMap("1", 1));
 
         // the map will always contain a single entry with the number of reloads as in
         // ("reloads" -> reloads)
