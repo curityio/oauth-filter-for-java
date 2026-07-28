@@ -139,6 +139,7 @@
             <artifactId>javax.json</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- This dependency is only required if an implementation of io.curity.oauth.HttpClientProvider is NOT provided as a SPI. -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
