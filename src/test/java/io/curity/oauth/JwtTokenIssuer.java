@@ -16,8 +16,6 @@
 
 package io.curity.oauth;
 
-import com.owlike.genson.Genson;
-import com.owlike.genson.GensonBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,9 +25,17 @@ import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.ReservedClaimNames;
 import org.jose4j.lang.JoseException;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonWriter;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.io.StringWriter;
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -47,8 +53,6 @@ public class JwtTokenIssuer
     private final PrivateKey _privateKey;
     private final Certificate _cert;
     private final String _keyId;
-
-    private final Genson _genson = new GensonBuilder().setHtmlSafe(false).create();
 
     //Issue Unsigned token.
     public JwtTokenIssuer(String issuer)
@@ -131,7 +135,7 @@ public class JwtTokenIssuer
         claims.put(ReservedClaimNames.EXPIRATION_TIME, expirationTime);
         claims.put(ReservedClaimNames.JWT_ID, UUID.randomUUID().toString());
 
-        String payload = _genson.serialize(claims);
+        String payload = serializeClaims(claims);
 
         token.setHeader(ReservedClaimNames.ISSUER, _issuer);
 
@@ -222,5 +226,120 @@ public class JwtTokenIssuer
         }
         
         return data;
+    }
+
+    private String serializeClaims(Map<String, Object> claims)
+    {
+        JsonObjectBuilder payload = Json.createObjectBuilder();
+
+        for (Map.Entry<String, Object> claim : claims.entrySet())
+        {
+            addToObject(payload, claim.getKey(), claim.getValue());
+        }
+
+        StringWriter out = new StringWriter();
+
+        try (JsonWriter writer = Json.createWriter(out))
+        {
+            writer.writeObject(payload.build());
+        }
+
+        return out.toString();
+    }
+
+    private void addToObject(JsonObjectBuilder object, String key, Object value)
+    {
+        if (value == null)
+        {
+            object.addNull(key);
+        }
+        else if (value instanceof String)
+        {
+            object.add(key, (String) value);
+        }
+        else if (value instanceof Integer || value instanceof Long || value instanceof Short || value instanceof Byte)
+        {
+            object.add(key, ((Number) value).longValue());
+        }
+        else if (value instanceof Double || value instanceof Float)
+        {
+            object.add(key, ((Number) value).doubleValue());
+        }
+        else if (value instanceof BigInteger)
+        {
+            object.add(key, (BigInteger) value);
+        }
+        else if (value instanceof BigDecimal)
+        {
+            object.add(key, (BigDecimal) value);
+        }
+        else if (value instanceof Boolean)
+        {
+            object.add(key, (Boolean) value);
+        }
+        else if (value instanceof List)
+        {
+            JsonArrayBuilder array = Json.createArrayBuilder();
+
+            for (Object element : (List<?>) value)
+            {
+                addToArray(array, element);
+            }
+
+            object.add(key, array);
+        }
+        else if (value.getClass().isArray())
+        {
+            JsonArrayBuilder array = Json.createArrayBuilder();
+            int length = Array.getLength(value);
+
+            for (int i = 0; i < length; i++)
+            {
+                addToArray(array, Array.get(value, i));
+            }
+
+            object.add(key, array);
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unsupported claim type for key '" + key + "': "
+                    + value.getClass().getName());
+        }
+    }
+
+    private void addToArray(JsonArrayBuilder array, Object value)
+    {
+        if (value == null)
+        {
+            array.addNull();
+        }
+        else if (value instanceof String)
+        {
+            array.add((String) value);
+        }
+        else if (value instanceof Integer || value instanceof Long || value instanceof Short || value instanceof Byte)
+        {
+            array.add(((Number) value).longValue());
+        }
+        else if (value instanceof Double || value instanceof Float)
+        {
+            array.add(((Number) value).doubleValue());
+        }
+        else if (value instanceof BigInteger)
+        {
+            array.add((BigInteger) value);
+        }
+        else if (value instanceof BigDecimal)
+        {
+            array.add((BigDecimal) value);
+        }
+        else if (value instanceof Boolean)
+        {
+            array.add((Boolean) value);
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unsupported claim array value type: " + value.getClass().getName());
+        }
     }
 }

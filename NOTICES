@@ -80,14 +80,14 @@ TypeUtil.java
 Copyright 2002-2012 Ramnivas Laddad, Juergen Hoeller, Chris Beams
 </pre>
 
-### Genson
+### Java API for JSON Processing (Reference Implementation)
 
-* License: Apache v. 2
+* License: CDDL v. 1.1 / GPL v. 2 with classpath exception
 * Modifications: No
-* Link: https://owlike.github.io/genson/ 
+* Link: https://github.com/eclipse-ee4j/jsonp
 * Notices:
 
-<pre>Copyright 2011-2014 Genson - Cepoi Eugen</pre>
+<pre>Copyright (c) 2013, 2020 Oracle and/or its affiliates. All rights reserved.</pre>
 
 ### jose4j
 
