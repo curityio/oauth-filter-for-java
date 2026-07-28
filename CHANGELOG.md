@@ -2,8 +2,16 @@
 
 ## Unreleased
 
+## 4.0.0 (2023-11-27)
+
+- Added support for EdDSA signatures.
+- Added support for `okp` JWK key type.
+- Improved JWK decoding and JWKS validation coverage with new tests.
+- Migrated from `javax.servlet` API to `jakarta.servlet` API.
+- Updated dependencies (including `jose4j` and `guava`).
+- Updated README documentation.
+
 ## 3.0.0 (2021-05-27)
 
-Features:
-    - Changed groupID to `io.curity` and package name to `io.curity.oauth`.
-    - Updated dependencies.
+- Changed groupID to `io.curity` and package name to `io.curity.oauth`.
+- Updated dependencies.
