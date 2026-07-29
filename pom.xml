@@ -73,10 +73,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.8.1</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <!-- The deps require Java 11, but the use of java.security.interfaces.EdECPublicKey requires Java 15 -->
+                    <source>15</source>
+                    <target>15</target>
                     <optimize>true</optimize>
                     <debug>false</debug>
                 </configuration>
@@ -269,7 +270,7 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <source>11</source>
+                            <source>15</source>
                         </configuration>
                     </plugin>
                     <plugin>
