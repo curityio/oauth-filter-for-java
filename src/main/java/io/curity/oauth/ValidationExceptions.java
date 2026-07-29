@@ -103,7 +103,7 @@ class UnknownAlgorithmException extends InvalidTokenFormatException
 
 class InvalidIssuerException extends TokenValidationException
 {
-    private static final String _formattedMessage = "Issuer %s does not match expected one %s";
+    private static final String _formattedMessage = "Issuer %s does not match expected one of %s";
 
     InvalidIssuerException(String expectedIssuer, String actualIssuer)
     {

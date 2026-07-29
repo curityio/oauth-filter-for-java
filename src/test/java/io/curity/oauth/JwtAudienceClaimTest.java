@@ -16,14 +16,9 @@
 
 package io.curity.oauth;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Test;
 
-import java.security.KeyStore;
-import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.cert.Certificate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +30,6 @@ import static org.junit.Assert.assertThrows;
 public class JwtAudienceClaimTest
 {
     private static final String ISSUER = "test:issuer";
-    private static final String KEY_ALIAS = "se.curity.test";
 
     @Test
     public void testValidatorAcceptsOneAudienceAndTokenHasValidAudienceString() throws Exception
@@ -112,7 +106,7 @@ public class JwtAudienceClaimTest
                                        Function<Map<String, PublicKey>, JwtValidator> validatorFactory,
                                        boolean shouldBeValid) throws Exception
     {
-        TokenFixture fixture = createTokenFixture(tokenAudiences);
+        JwtTokenFixtureHelper.TokenFixture fixture = JwtTokenFixtureHelper.createTokenFixture(ISSUER, tokenAudiences);
         try (JwtValidator validator = validatorFactory.apply(fixture.keys))
         {
             if (shouldBeValid)
@@ -124,33 +118,6 @@ public class JwtAudienceClaimTest
             {
                 assertThrows(TokenValidationException.class, () -> validator.validate(fixture.token));
             }
-        }
-    }
-
-    private static TokenFixture createTokenFixture(List<String> tokenAudiences) throws Exception
-    {
-        KeyStore keyStore = TestKeyStoreHelper.loadKeyStore();
-        PrivateKey privateKey = TestKeyStoreHelper.getPrivateKey(keyStore, KEY_ALIAS);
-        Certificate cert = TestKeyStoreHelper.getCertificate(keyStore, KEY_ALIAS);
-
-        JwtTokenIssuer issuer = new JwtTokenIssuer(ISSUER, "RS256", privateKey, cert);
-        String tokenWithArrayAudience = issuer.issueToken("testsubject", tokenAudiences, 200, Collections.emptyMap());
-
-        byte[] x5tS256 = DigestUtils.sha256(cert.getEncoded());
-        String b64x5tS256 = org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString(x5tS256);
-        Map<String, PublicKey> keys = Map.of(b64x5tS256, cert.getPublicKey());
-        return new TokenFixture(tokenWithArrayAudience, keys);
-    }
-
-    private static class TokenFixture
-    {
-        private final String token;
-        private final Map<String, PublicKey> keys;
-
-        private TokenFixture(String token, Map<String, PublicKey> keys)
-        {
-            this.token = token;
-            this.keys = keys;
         }
     }
 }

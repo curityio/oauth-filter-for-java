@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Support `aud` claim when it's specified as an array rather than a string.
+- Support `aud` claim in JWT when it's specified as an array rather than a string.
+- Allow JWT validators to configure a Set of accepted audiences, not just one.
 
 ## 4.0.0 (2023-11-27)
 

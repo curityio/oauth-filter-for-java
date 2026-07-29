@@ -44,18 +44,28 @@ abstract class AbstractJwtValidator implements JwtValidator
     private final Map<String, JwtHeader> _decodedJwtHeaderByEncodedHeader = new HashMap<>(1);
     private final JsonReaderFactory _jsonReaderFactory;
     private final Set<String> _audiences;
-    private final String _issuer;
+    private final Set<String> _issuers;
 
-    protected AbstractJwtValidator(String issuer, Set<String> audiences, JsonReaderFactory jsonReaderFactory)
+    protected AbstractJwtValidator(Set<String> issuers, Set<String> audiences, JsonReaderFactory jsonReaderFactory)
     {
-        _issuer = issuer;
+        _issuers = Set.copyOf(issuers);
         _audiences = Set.copyOf(audiences);
         _jsonReaderFactory = jsonReaderFactory;
     }
 
     protected AbstractJwtValidator(String issuer, String audience, JsonReaderFactory jsonReaderFactory)
     {
-        this(issuer, Set.of(audience), jsonReaderFactory);
+        this(Set.of(issuer), Set.of(audience), jsonReaderFactory);
+    }
+
+    protected AbstractJwtValidator(String issuer, Set<String> audiences, JsonReaderFactory jsonReaderFactory)
+    {
+        this(Set.of(issuer), audiences, jsonReaderFactory);
+    }
+
+    protected AbstractJwtValidator(Set<String> issuers, String audience, JsonReaderFactory jsonReaderFactory)
+    {
+        this(issuers, Set.of(audience), jsonReaderFactory);
     }
 
     public final JsonData validate(String jwt) throws TokenValidationException
@@ -90,9 +100,9 @@ abstract class AbstractJwtValidator implements JwtValidator
                 throw new InvalidAudienceException(String.join(", ", _audiences), String.join(", ", aud));
             }
 
-            if (!iss.equals(_issuer))
+            if (!_issuers.contains(iss))
             {
-                throw new InvalidIssuerException(_issuer, iss);
+                throw new InvalidIssuerException(String.join(", ", _issuers), iss);
             }
 
             Instant now = Instant.now();

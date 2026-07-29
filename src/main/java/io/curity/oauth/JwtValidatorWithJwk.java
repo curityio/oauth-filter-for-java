@@ -32,18 +32,30 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
 
     private final JwkManager _jwkManager;
 
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, Set<String> audiences, Set<String> issuers,
+                        JsonReaderFactory jsonReaderFactory)
+    {
+        super(issuers, audiences, jsonReaderFactory);
+
+        _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
+    }
+
     JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, Set<String> audiences, String issuer,
                         JsonReaderFactory jsonReaderFactory)
     {
-        super(issuer, audiences, jsonReaderFactory);
-
-        _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
+        this(minKidReloadTime, webKeysClient, audiences, Set.of(issuer), jsonReaderFactory);
     }
 
     JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, String audience, String issuer,
                         JsonReaderFactory jsonReaderFactory)
     {
-        this(minKidReloadTime, webKeysClient, Set.of(audience), issuer, jsonReaderFactory);
+        this(minKidReloadTime, webKeysClient, Set.of(audience), Set.of(issuer), jsonReaderFactory);
+    }
+
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, String audience, Set<String> issuers,
+                        JsonReaderFactory jsonReaderFactory)
+    {
+        this(minKidReloadTime, webKeysClient, Set.of(audience), issuers, jsonReaderFactory);
     }
 
     @Override

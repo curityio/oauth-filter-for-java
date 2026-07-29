@@ -27,28 +27,50 @@ final class JwtValidatorWithCert extends AbstractJwtValidator
 
     private final Map<String, PublicKey> _keys;
 
+    JwtValidatorWithCert(Set<String> issuers, Set<String> audiences, Map<String, PublicKey> publicKeys)
+    {
+        this(issuers, audiences, publicKeys, JsonUtils.createDefaultReaderFactory());
+    }
+
     JwtValidatorWithCert(String issuer, Set<String> audiences, Map<String, PublicKey> publicKeys)
     {
-        this(issuer, audiences, publicKeys, JsonUtils.createDefaultReaderFactory());
+        this(Set.of(issuer), audiences, publicKeys);
+    }
+
+    JwtValidatorWithCert(Set<String> issuers, String audience, Map<String, PublicKey> publicKeys)
+    {
+        this(issuers, Set.of(audience), publicKeys);
     }
 
     JwtValidatorWithCert(String issuer, String audience, Map<String, PublicKey> publicKeys)
     {
-        this(issuer, Set.of(audience), publicKeys);
+        this(Set.of(issuer), audience, publicKeys);
+    }
+
+    JwtValidatorWithCert(Set<String> issuers, Set<String> audiences, Map<String, PublicKey> publicKeys,
+                         JsonReaderFactory jsonReaderFactory)
+    {
+        super(issuers, audiences, jsonReaderFactory);
+
+        _keys = publicKeys;
     }
 
     JwtValidatorWithCert(String issuer, Set<String> audiences, Map<String, PublicKey> publicKeys,
                          JsonReaderFactory jsonReaderFactory)
     {
-        super(issuer, audiences, jsonReaderFactory);
+        this(Set.of(issuer), audiences, publicKeys, jsonReaderFactory);
+    }
 
-        _keys = publicKeys;
+    JwtValidatorWithCert(Set<String> issuers, String audience, Map<String, PublicKey> publicKeys,
+                         JsonReaderFactory jsonReaderFactory)
+    {
+        this(issuers, Set.of(audience), publicKeys, jsonReaderFactory);
     }
 
     JwtValidatorWithCert(String issuer, String audience, Map<String, PublicKey> publicKeys,
                          JsonReaderFactory jsonReaderFactory)
     {
-        this(issuer, Set.of(audience), publicKeys, jsonReaderFactory);
+        this(Set.of(issuer), audience, publicKeys, jsonReaderFactory);
     }
 
     @Override
