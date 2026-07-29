@@ -21,11 +21,9 @@ import java.security.PublicKey;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
 
 final class JwtValidatorWithCert extends AbstractJwtValidator
 {
-    private static final Logger _logger = Logger.getLogger(JwtValidatorWithCert.class.getName());
 
     private final Map<String, PublicKey> _keys;
 

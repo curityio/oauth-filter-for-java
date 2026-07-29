@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2016 Curity AB.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,15 +29,14 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonWriter;
-import java.security.PrivateKey;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,13 +98,10 @@ public class JwtTokenIssuer
     String issueToken(String subject, String audience, int lifetimeInMinutes, Map<String, Object> attributes)
             throws Exception
     {
-        String[] audiences = stringToArray(audience);
-
-        return issueToken(subject, Arrays.asList(audiences), lifetimeInMinutes, attributes);
+        return issueToken(subject, List.of(audience), lifetimeInMinutes, attributes);
     }
 
-    private String issueToken(String subject, List<String> audiences, int lifetimeInMinutes, Map<String, Object>
-            attributes)
+    String issueToken(String subject, List<String> audiences, int lifetimeInMinutes, Map<String, Object> attributes)
             throws Exception
     {
         Map<String, Object> claims = new LinkedHashMap<>();
@@ -197,7 +193,7 @@ public class JwtTokenIssuer
 
                     _logger.trace(message);
                 }
-                
+
                 _logger.trace(serializedToken);
             }
 
@@ -211,20 +207,13 @@ public class JwtTokenIssuer
         }
     }
 
-    private String[] stringToArray(String str)
-    {
-        String[] ret;
-        ret = str.split(" ");
-        return ret;
-    }
-
-    private Object arrayOrString(List data)
+    private Object arrayOrString(List<?> data)
     {
         if (data.size() == 1)
         {
             return data.get(0);
         }
-        
+
         return data;
     }
 

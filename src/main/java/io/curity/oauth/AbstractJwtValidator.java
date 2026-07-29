@@ -236,7 +236,7 @@ abstract class AbstractJwtValidator implements JwtValidator
         });
     }
 
-    class JwtHeader
+    static final class JwtHeader
     {
         private final JsonObject _jsonObject;
 
