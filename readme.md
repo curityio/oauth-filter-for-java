@@ -3,7 +3,10 @@
 [![Quality](https://img.shields.io/badge/quality-test-yellow)](https://curity.io/resources/code-examples/status/)
 [![Availability](https://img.shields.io/badge/availability-source-blue)](https://curity.io/resources/code-examples/status/)
 
-This project contains a Servlet Filter that authenticates and authorizes requests using OAuth access tokens of various kinds. There are two `OAuthFilter` implementations. `OAuthJwtFilter` and `OAuthOpaqueFilter`. Both implement `jakarta.servlet.Filter`, and can be used to protect APIs built using Java. Depending on the format of the access token, these two concrete implementations can be used in the following manner:
+This project contains a Servlet Filter that authenticates and authorizes requests using OAuth access tokens of various kinds. There are two `OAuthFilter` implementations. `OAuthJwtFilter` and `OAuthOpaqueFilter`. 
+Both implement `jakarta.servlet.Filter`, and can be used to protect APIs built using Java.
+
+Depending on the format of the access token, these two concrete implementations can be used in the following manner:
 
 1. If the token is a Json Web Token (JWT) then validate the token using a public key
 2. If the token is a reference (opaque) token, then validate by calling the OAuth server's
@@ -13,7 +16,7 @@ An example of how to use this filter can be found in a [separate repository](htt
 
 ## Filter Overview
 
-The filter is build to perform two tasks.
+The filter is built to perform two tasks.
 
 1. Authenticate the caller by validating the incoming access token
 2. Authorize the operation by validating the scopes in the access token against the configured scopes
@@ -46,15 +49,16 @@ For example, if you use Maven, add to your `pom.xml`:
 </dependency>
 ```
 
-or with Gradle, inlcude in `build.gradle`:
+or with Gradle, include in `build.gradle`:
 
 ```groovy
-implementation 'io.curity:oauth-filter:4.0.0'
+implementation("io.curity:oauth-filter:4.0.0")
 ```
 
 ## Configuring the Filter
 
-To configure the filter, the following settings are required for each of the two concrete implementations, depending on the format of the token your OAuth server is using.
+To configure the filter, the following settings are required for each of the two concrete implementations, 
+depending on the format of the token your OAuth server is using.
 
 ### Init-params for the `OAuthJwtFilter`
 
@@ -77,18 +81,41 @@ scope                      | A space separated list of scopes required to access
 clientId                   | Your application's client id to use for introspection.
 clientSecret               | Your application's client secret.
 
-## Providing an external HttpClient
+## Providing external services (`io.curity.oauth.HttpClientProvider` and `javax.json.spi.JsonProvider`)
 
-The `OAuthFilter` uses an [HttpClient](https://hc.apache.org/httpcomponents-client-ga/) to communicate with the authentication server. The HttpClient may be overridden by the web application by defining a service Provider class in this location:
+The `OAuthFilter` requires an HTTP Client and a JSON parser to communicate with the authentication server.
 
-* `META-INF/services/io.curity.oauth.HttpClientProvider` relative to the classpath
+Both are found via Java's standard SPI mechanism.
+
+The HttpClient may be overridden by the web application by defining a service Provider class in this location:
+
+### `io.curity.oauth.HttpClientProvider`
+
+This interface is defined by this library. By default, an Apache HTTP Client will be used (optional dependency).
+
+To provide an alternative implementation, add the file, relative to the classpath (normally in your jar):
+
+* `META-INF/services/io.curity.oauth.HttpClientProvider`
 
 The file should contain the name of the class used as the provider, e.g. `com.example.HttpClientProvider`
 
 This class must extend the abstract class `io.curity.oauth.HttpClientProvider` and implement two methods which create an introspection client (implementation of `io.curity.oauth.IntrospectionClient`), and a web keys client (implementation of `io.curity.oauth.WebKeysClient`).
 
+### `javax.json.spi.JsonProvider`
+
+A JSON Provider is normally provided by Jakarta (Java EE) servers.
+
+If you don't already have a provider in the classpath, you can use the following implementation:
+
+```xml
+<dependency>
+    <groupId>org.glassfish</groupId>
+    <artifactId>javax.json</artifactId>
+</dependency>
+```
+
 ## More Information
 
-For more information, please contact [Curity](http://curity.io).
+For more information, please contact [Curity](https://curity.io).
 
-Copyright (C) 2016-2022 Curity AB. All rights reserved
+Copyright (C) 2016-2026 Curity AB. All rights reserved

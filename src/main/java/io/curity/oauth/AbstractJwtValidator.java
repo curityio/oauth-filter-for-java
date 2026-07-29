@@ -177,11 +177,18 @@ abstract class AbstractJwtValidator implements JwtValidator
     {
         try
         {
-            Signature verifier = switch (algorithm) {
-                case "RS256" -> Signature.getInstance("SHA256withRSA");
-                case "EdDSA" -> Signature.getInstance(((EdECPublicKey) publicKey).getParams().getName());
-                default -> throw new UnknownAlgorithmException(String.format("Unsupported signature algorithm '%s'", algorithm));
-            };
+            Signature verifier;
+            switch (algorithm)
+            {
+                case "RS256":
+                    verifier = Signature.getInstance("SHA256withRSA");
+                    break;
+                case "EdDSA":
+                    verifier = Signature.getInstance(((EdECPublicKey) publicKey).getParams().getName());
+                    break;
+                default:
+                    throw new UnknownAlgorithmException(String.format("Unsupported signature algorithm '%s'", algorithm));
+            }
 
             verifier.initVerify(publicKey);
             verifier.update(signingInput);
@@ -196,10 +203,7 @@ abstract class AbstractJwtValidator implements JwtValidator
 
     private boolean canRecognizeAlg(String alg)
     {
-        return switch (alg) {
-            case "RS256", "EdDSA" -> true;
-            default -> false;
-        };
+        return "RS256".equals(alg) || "EdDSA".equals(alg);
     }
 
     private JsonObject decodeJwtBody(String body)

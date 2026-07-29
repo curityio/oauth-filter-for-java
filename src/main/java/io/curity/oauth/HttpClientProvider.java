@@ -17,16 +17,29 @@
 package io.curity.oauth;
 
 import jakarta.servlet.UnavailableException;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+/**
+ * Service Provider Interface (SPI) for creating HTTP clients used by the filter.
+ * <p>
+ * Implementations are discovered via {@link ServiceLoader}. The first provider
+ * found for this SPI is used; if none is available, {@link DefaultHttpClientProvider}
+ * is used as a fallback, which requires the Apache HTTP Client library.
+ */
 public abstract class HttpClientProvider
 {
     public HttpClientProvider()
     {
     }
 
+    /**
+     * Resolve the active {@link HttpClientProvider} implementation.
+     *
+     * @return the provider discovered through the SPI, or the default provider when none is registered
+     */
     static HttpClientProvider provider()
     {
         ServiceLoader<HttpClientProvider> loader = ServiceLoader.load(HttpClientProvider.class);
@@ -40,7 +53,21 @@ public abstract class HttpClientProvider
         return new DefaultHttpClientProvider();
     }
 
+    /**
+     * Create an introspection client using the supplied configuration.
+     *
+     * @param config filter configuration values
+     * @return a client capable of token introspection
+     * @throws UnavailableException if the client cannot be created
+     */
     public abstract IntrospectionClient createIntrospectionClient(Map<String, ?> config) throws UnavailableException;
 
+    /**
+     * Create a web keys client using the supplied configuration.
+     *
+     * @param config filter configuration values
+     * @return a client capable of retrieving web keys
+     * @throws UnavailableException if the client cannot be created
+     */
     public abstract WebKeysClient createWebKeysClient(Map<String, ?> config) throws UnavailableException;
 }
