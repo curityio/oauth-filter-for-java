@@ -83,7 +83,7 @@ clientSecret               | Your application's client secret.
 
 ## Providing external services (`io.curity.oauth.HttpClientProvider` and `javax.json.spi.JsonProvider`)
 
-The `OAuthFilter` requires a HTTP Client and a JSON parser to communicate with the authentication server.
+The `OAuthFilter` requires an HTTP Client and a JSON parser to communicate with the authentication server.
 
 Both are found via Java's standard SPI mechanism.
 
