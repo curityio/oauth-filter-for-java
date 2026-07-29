@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2016 Curity AB.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,14 +43,19 @@ abstract class AbstractJwtValidator implements JwtValidator
     private final Map<String, JsonObject> _decodedJwtBodyByEncodedBody = new HashMap<>(1);
     private final Map<String, JwtHeader> _decodedJwtHeaderByEncodedHeader = new HashMap<>(1);
     private final JsonReaderFactory _jsonReaderFactory;
-    private final String _audience;
+    private final Set<String> _audiences;
     private final String _issuer;
 
-    AbstractJwtValidator(String issuer, String audience, JsonReaderFactory jsonReaderFactory)
+    protected AbstractJwtValidator(String issuer, Set<String> audiences, JsonReaderFactory jsonReaderFactory)
     {
         _issuer = issuer;
-        _audience = audience;
+        _audiences = Set.copyOf(audiences);
         _jsonReaderFactory = jsonReaderFactory;
+    }
+
+    protected AbstractJwtValidator(String issuer, String audience, JsonReaderFactory jsonReaderFactory)
+    {
+        this(issuer, Set.of(audience), jsonReaderFactory);
     }
 
     public final JsonData validate(String jwt) throws TokenValidationException
@@ -73,15 +79,15 @@ abstract class AbstractJwtValidator implements JwtValidator
             long exp = JsonUtils.getLong(jwtBody, "exp");
             long iat = JsonUtils.getLong(jwtBody, "iat");
 
-            String aud = JsonUtils.getString(jwtBody, "aud");
+            Set<String> aud = JsonUtils.getStringOrStrings(jwtBody, "aud");
             String iss = JsonUtils.getString(jwtBody, "iss");
 
-            assert aud != null && aud.length() > 0 : "aud claim is not present in JWT";
-            assert iss != null && iss.length() > 0 : "iss claim is not present in JWT";
+            assert !aud.isEmpty() : "aud claim is not present or is invalid in JWT";
+            assert iss != null && !iss.isEmpty() : "iss claim is not present in JWT";
 
-            if (!aud.equals(_audience))
+            if (aud.stream().noneMatch(_audiences::contains))
             {
-                throw new InvalidAudienceException(_audience, aud);
+                throw new InvalidAudienceException(String.join(", ", _audiences), String.join(", ", aud));
             }
 
             if (!iss.equals(_issuer))

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Support `aud` claim when it's specified as an array rather than a string.
+
 ## 4.0.0 (2023-11-27)
 
 - Added support for EdDSA signatures.

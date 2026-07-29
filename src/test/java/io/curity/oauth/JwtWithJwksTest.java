@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2016 Curity AB.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,14 +27,8 @@ import javax.json.JsonObject;
 import javax.json.JsonReaderFactory;
 import javax.json.JsonString;
 import javax.json.spi.JsonProvider;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.net.URL;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.PrivateKey;
-import java.security.cert.Certificate;
 import java.security.interfaces.EdECPrivateKey;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,10 +52,6 @@ public class JwtWithJwksTest
     private final String EXTRA_CLAIM = "TEST_KEY";
     private final String EXTRA_CLAIM_VALUE = "TEST_VALUE";
 
-    // Used for signing tokens
-    private final String PATH_TO_KEY = "/Se.Curity.Test.p12";
-    private final String KEY_PWD = "Password1";
-
     private String _testToken;
     private KeyStore _keyStore;
 
@@ -82,9 +72,9 @@ public class JwtWithJwksTest
     @Before
     public void before() throws Exception
     {
-        loadKeyStore();
+        _keyStore = TestKeyStoreHelper.loadKeyStore();
 
-        PrivateKey key = getPrivateKey();
+        PrivateKey key = TestKeyStoreHelper.getPrivateKey(_keyStore, _keyAlias);
 
         if (!_algorithm.equals("EdDSA")) {
             // Create test token on the fly
@@ -156,34 +146,5 @@ public class JwtWithJwksTest
         keys.put("-1909572257", "{\"keys\":[{\"kty\":\"OKP\",\"kid\":\"-1909572257\",\"use\":\"sig\",\"alg\":\"EdDSA\",\"crv\":\"Ed25519\",\"x\":\"XWxGtApfcqmKI7p0OKnF5JSEWMVoLsytFXLEP7xZ_l8\",\"x5t\":\"SHd4HCUdA8HJVGM2UWz5NmIPTG0\"}]}");
         keys.put("1716999904","{\"keys\":[{\"kty\":\"OKP\",\"kid\":\"1716999904\",\"use\":\"sig\",\"alg\":\"EdDSA\",\"crv\":\"Ed448\",\"x\":\"lDc565Rydl9MUCoOB9JpGV3pUSHm7FvuiuEMvrvRkS7PeYL41rPU6s2rMdLeHiXfSxvR1veh4C0A\",\"x5t\":\"1IRTBLLQeiL2YZLB1VDDvCTGozc\"}]}");
         return keys;
-    }
-
-    private void loadKeyStore()
-            throws Exception
-    {
-        URL url = getClass().getResource(PATH_TO_KEY);
-        assert url != null;
-        File certFile = new File(url.getFile());
-
-        InputStream keyIS = new FileInputStream(certFile);
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        keyStore.load(keyIS, KEY_PWD.toCharArray());
-
-        keyIS.close();
-
-        this._keyStore=keyStore;
-    }
-
-    private PrivateKey getPrivateKey()
-            throws Exception
-    {
-        return (PrivateKey)this._keyStore.getKey(_keyAlias, KEY_PWD.toCharArray());
-
-    }
-
-    private Certificate getCertificate() throws KeyStoreException {
-        //Get key by alias (found in the p12 file using:
-        //keytool -list -keystore test-root-ca.p12 -storepass foobar -storetype PKCS12
-        return this._keyStore.getCertificate(_keyAlias);
     }
 }

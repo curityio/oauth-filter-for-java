@@ -22,6 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,12 +32,18 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
 
     private final JwkManager _jwkManager;
 
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, Set<String> audiences, String issuer,
+                        JsonReaderFactory jsonReaderFactory)
+    {
+        super(issuer, audiences, jsonReaderFactory);
+
+        _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
+    }
+
     JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, String audience, String issuer,
                         JsonReaderFactory jsonReaderFactory)
     {
-        super(issuer, audience, jsonReaderFactory);
-        
-        _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
+        this(minKidReloadTime, webKeysClient, Set.of(audience), issuer, jsonReaderFactory);
     }
 
     @Override

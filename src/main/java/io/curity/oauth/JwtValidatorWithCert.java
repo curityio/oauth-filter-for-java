@@ -20,6 +20,7 @@ import javax.json.JsonReaderFactory;
 import java.security.PublicKey;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
 
 final class JwtValidatorWithCert extends AbstractJwtValidator
@@ -28,17 +29,28 @@ final class JwtValidatorWithCert extends AbstractJwtValidator
 
     private final Map<String, PublicKey> _keys;
 
+    JwtValidatorWithCert(String issuer, Set<String> audiences, Map<String, PublicKey> publicKeys)
+    {
+        this(issuer, audiences, publicKeys, JsonUtils.createDefaultReaderFactory());
+    }
+
     JwtValidatorWithCert(String issuer, String audience, Map<String, PublicKey> publicKeys)
     {
-        this(issuer, audience, publicKeys, JsonUtils.createDefaultReaderFactory());
+        this(issuer, Set.of(audience), publicKeys);
+    }
+
+    JwtValidatorWithCert(String issuer, Set<String> audiences, Map<String, PublicKey> publicKeys,
+                         JsonReaderFactory jsonReaderFactory)
+    {
+        super(issuer, audiences, jsonReaderFactory);
+
+        _keys = publicKeys;
     }
 
     JwtValidatorWithCert(String issuer, String audience, Map<String, PublicKey> publicKeys,
                          JsonReaderFactory jsonReaderFactory)
     {
-        super(issuer, audience, jsonReaderFactory);
-        
-        _keys = publicKeys;
+        this(issuer, Set.of(audience), publicKeys, jsonReaderFactory);
     }
 
     @Override
