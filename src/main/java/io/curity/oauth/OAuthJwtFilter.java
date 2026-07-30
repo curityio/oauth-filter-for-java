@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2016 Curity AB.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +16,14 @@
 
 package io.curity.oauth;
 
-import javax.json.JsonReaderFactory;
-import javax.json.spi.JsonProvider;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.UnavailableException;
+
+import javax.json.JsonReaderFactory;
+import javax.json.spi.JsonProvider;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class OAuthJwtFilter extends OAuthFilter
@@ -53,7 +55,7 @@ public class OAuthJwtFilter extends OAuthFilter
             if (_jwtValidator == null)
             {
                 _jwtValidator = createTokenValidator(getFilterConfiguration());
-                
+
                 _logger.info(() -> String.format("%s successfully initialized", OAuthFilter.class.getSimpleName()));
             }
             else
@@ -71,10 +73,10 @@ public class OAuthJwtFilter extends OAuthFilter
         // the ReaderFactory using the filter's config.
         JsonReaderFactory jsonReaderFactory = JsonProvider.provider().createReaderFactory(filterConfig);
         WebKeysClient webKeysClient = HttpClientProvider.provider().createWebKeysClient(filterConfig);
-        String audience = FilterHelper.getInitParamValue(InitParams.AUDIENCE, filterConfig);
-        String issuer = FilterHelper.getInitParamValue(InitParams.ISSUER, filterConfig);
+        Set<String> audiences = Set.copyOf(FilterHelper.getWhitespaceSeparatedInitParamValues(InitParams.AUDIENCE, filterConfig));
+        Set<String> issuers = Set.copyOf(FilterHelper.getWhitespaceSeparatedInitParamValues(InitParams.ISSUER, filterConfig));
 
-        return _jwtValidator = new JwtValidatorWithJwk(_minKidReloadTimeInSeconds, webKeysClient, audience, issuer,
+        return _jwtValidator = new JwtValidatorWithJwk(_minKidReloadTimeInSeconds, webKeysClient, audiences, issuers,
                 jsonReaderFactory);
     }
 

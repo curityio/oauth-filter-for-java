@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2016 Curity AB.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,8 +25,8 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.UnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,15 +35,15 @@ import java.util.logging.Logger;
 
 public abstract class OAuthFilter implements Filter
 {
-    private static final String[] NO_SCOPES = {};
     private static final Logger _logger = Logger.getLogger(OAuthFilter.class.getName());
+
     private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private static final String AUTHORIZATION = "Authorization";
     public static final String PRINCIPAL_ATTRIBUTE_NAME = "principal";
 
     private Map<String, String> _filterConfig; // Protected, so subclasses don't have to repeat the conversion to this
     private String _oauthHost = null;
-    private String[] _scopes = null;
+    private List<String> _scopes = List.of();
 
     private interface InitParams
     {
@@ -58,25 +58,25 @@ public abstract class OAuthFilter implements Filter
 
         _oauthHost = FilterHelper.getInitParamValue(InitParams.OAUTH_HOST, _filterConfig);
 
-        _scopes = FilterHelper.getOptionalInitParamValue(InitParams.SCOPE, _filterConfig, it -> it.split("\\s+"))
-                .orElse(NO_SCOPES);
+        _scopes = FilterHelper.getWhitespaceSeparatedInitParamValues(InitParams.SCOPE, _filterConfig);
     }
 
     /**
      * The doFilter is the primary filter method of a Servlet filter. It is implemented as a final method
      * and will call the configured filters authenticate and authorize methods.
      * Authorize is optional to implement as this filter implements a default scope check method.
-     * @param servletRequest The default servlet request
+     *
+     * @param servletRequest  The default servlet request
      * @param servletResponse The default servlet response
-     * @param filterChain A filter chain to continue with after this filter is done
-     * @throws IOException when response fails to send an error
+     * @param filterChain     A filter chain to continue with after this filter is done
+     * @throws IOException      when response fails to send an error
      * @throws ServletException when authentication fails for some exceptional reason
      */
     @Override
     public final void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException
     {
-        HttpServletResponse response = (HttpServletResponse)servletResponse;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
         Optional<String> token = extractAccessTokenFromHeader(servletRequest);
         String oauthHost = getOAuthServerRealm();
 
@@ -111,7 +111,7 @@ public abstract class OAuthFilter implements Filter
         if (filterChain != null)
         {
             filterChain.doFilter(
-                    new AuthenticatedUserRequestWrapper((HttpServletRequest)servletRequest, authenticatedUser),
+                    new AuthenticatedUserRequestWrapper((HttpServletRequest) servletRequest, authenticatedUser),
                     servletResponse);
         }
     }
@@ -163,6 +163,7 @@ public abstract class OAuthFilter implements Filter
     /**
      * This is the authenticate method of the filter, it will take the token as string input and
      * must perform the appropriate operation to validate the token.
+     *
      * @param token - The token extracted from the Authorization header and stripped of the Bearer
      * @return An AuthenticatedUser if the token was valid, or null if not.
      * @throws ServletException when authentication fails for some exceptional reason
@@ -184,6 +185,7 @@ public abstract class OAuthFilter implements Filter
 
         return Optional.ofNullable(result);
     }
+
     /**
      * Authorizes the current request by checking that all configured scopes are included in the one presented in the
      * request.
@@ -196,10 +198,8 @@ public abstract class OAuthFilter implements Filter
      */
     protected boolean isAuthorized(AuthenticatedUser authenticatedUser)
     {
-        List<String> requiredScopes = Arrays.asList(_scopes);
-
         // No scopes required for authorization
-        return requiredScopes.isEmpty() || authenticatedUser.getScopes().containsAll(requiredScopes);
+        return _scopes.isEmpty() || authenticatedUser.getScopes().containsAll(_scopes);
     }
 
     @Override
@@ -222,12 +222,13 @@ public abstract class OAuthFilter implements Filter
 
     /**
      * Extracts the token from the Authorization header, removing the Bearer prefix
+     *
      * @param request The incoming request
      * @return the token or null if not present
      */
     private Optional<String> extractAccessTokenFromHeader(ServletRequest request)
     {
-        HttpServletRequest httpRequest = (HttpServletRequest)request;
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
         String authorizationHeader = httpRequest.getHeader(AUTHORIZATION);
         String result = null;
 
@@ -235,7 +236,7 @@ public abstract class OAuthFilter implements Filter
         {
             String[] tokenSplit = authorizationHeader.split("[Bb][Ee][Aa][Rr][Ee][Rr]\\s+");
 
-            if(tokenSplit.length != 2)
+            if (tokenSplit.length != 2)
             {
                 _logger.fine("Incoming token in Authorization header is not a Bearer token");
             }

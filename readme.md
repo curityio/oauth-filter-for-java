@@ -62,24 +62,26 @@ depending on the format of the token your OAuth server is using.
 
 ### Init-params for the `OAuthJwtFilter`
 
-Configuration Setting Name | Description
----------------------------|----------------
-oauthHost                  | Hostname of the OAuth server.
-oauthPort                  | Port of the OAuth server.
-jsonWebKeysPath            | Path to the JWKS endpoint on the OAuth server.
-scope                      | A space separated list of scopes required to access the API.
-minKidReloadTimeInSeconds  | Minimum time to reload the webKeys cache used by the Filter.
+| Configuration Setting Name | Description                                                                                  |
+|----------------------------|----------------------------------------------------------------------------------------------|
+| oauthHost                  | Hostname of the OAuth server.                                                                |
+| oauthPort                  | Port of the OAuth server.                                                                    |
+| jsonWebKeysPath            | Path to the JWKS endpoint on the OAuth server.                                               |
+| scope                      | A space separated list of scopes required to access the API.                                 |
+| minKidReloadTimeInSeconds  | Minimum time to reload the webKeys cache used by the Filter.                                 |
+| issuer                     | A space separated list of issuers to accept. If not specified, all issuers are accepted.     |
+| audience                   | A space separated list of audiences to accept. If not specified, all audiences are accepted. |
 
 ### Init-params for the `OAuthOpaqueFilter`
 
-Configuration Setting Name | Description
----------------------------|----------------
-oauthHost                  | Hostname of the OAuth server.
-oauthPort                  | Port of the OAuth server.
-introspectionPath          | Path to the introspection endpoint on the OAuth server.
-scope                      | A space separated list of scopes required to access the API.
-clientId                   | Your application's client id to use for introspection.
-clientSecret               | Your application's client secret.
+| Configuration Setting Name | Description                                                  |
+|----------------------------|--------------------------------------------------------------|
+| oauthHost                  | Hostname of the OAuth server.                                |
+| oauthPort                  | Port of the OAuth server.                                    |
+| introspectionPath          | Path to the introspection endpoint on the OAuth server.      |
+| scope                      | A space separated list of scopes required to access the API. |
+| clientId                   | Your application's client id to use for introspection.       |
+| clientSecret               | Your application's client secret.                            |
 
 ## Providing external services (`io.curity.oauth.HttpClientProvider` and `javax.json.spi.JsonProvider`)
 

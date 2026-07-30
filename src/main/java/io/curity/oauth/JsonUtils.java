@@ -51,14 +51,30 @@ final class JsonUtils
         return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(presentedScopes)));
     }
 
+    /**
+     * Get the string value of a JSON property.
+     *
+     * @param jsonObject The JSON object containing the property.
+     * @param name       The name of the property.
+     * @return The string value of the property, or null if not present or not a string.
+     */
     static String getString(JsonObject jsonObject, String name)
     {
         return Optional.ofNullable(jsonObject.get(name))
                 .filter(it -> it.getValueType() == JsonValue.ValueType.STRING)
-                .map(it -> stringValue((JsonString) it))
+                .map(JsonUtils::stringValue)
                 .orElse(null);
     }
 
+    /**
+     * Get the string values of a JSON property.
+     *
+     * @param jsonObject The JSON object containing the property.
+     * @param name       The name of the property.
+     * @return The string values of the property, or an empty set if not present or not a string or array.
+     * If the property is an array, it must only contain strings, otherwise this method will throw a
+     * {@link ClassCastException}.
+     */
     static Set<String> getStringOrStrings(JsonObject jsonObject, String name)
     {
         return Optional.ofNullable(jsonObject.get(name))
