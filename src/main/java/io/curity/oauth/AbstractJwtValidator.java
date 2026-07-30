@@ -95,12 +95,12 @@ abstract class AbstractJwtValidator implements JwtValidator
             assert !aud.isEmpty() : "aud claim is not present or is invalid in JWT";
             assert iss != null && !iss.isEmpty() : "iss claim is not present in JWT";
 
-            if (aud.stream().noneMatch(_audiences::contains))
+            if (!_audiences.isEmpty() && aud.stream().noneMatch(_audiences::contains))
             {
                 throw new InvalidAudienceException(String.join(", ", _audiences), String.join(", ", aud));
             }
 
-            if (!_issuers.contains(iss))
+            if (!_issuers.isEmpty() && !_issuers.contains(iss))
             {
                 throw new InvalidIssuerException(String.join(", ", _issuers), iss);
             }

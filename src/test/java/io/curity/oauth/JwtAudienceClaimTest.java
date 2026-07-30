@@ -93,9 +93,29 @@ public class JwtAudienceClaimTest
                 keys -> new JwtValidatorWithCert(ISSUER, Set.of("a", "b"), keys), false);
     }
 
+    @Test
+    public void testValidatorAcceptsNoAudiencesAndTokenHasAnyAudience() throws Exception
+    {
+        assertTokenValidation("any:audience",
+                keys -> new JwtValidatorWithCert(ISSUER, Set.of(), keys), true);
+
+        assertTokenValidation(List.of("any:audience", "another:audience"),
+                keys -> new JwtValidatorWithCert(ISSUER, Set.of(), keys), true);
+    }
+
+    @Test
+    public void testValidatorAcceptsNoIssuersAndTokenHasAnyIssuer() throws Exception
+    {
+        assertTokenValidation("some:audience",
+                keys -> new JwtValidatorWithCert(Set.of(), Set.of("some:audience"), keys), true);
+
+        assertTokenValidation(List.of("some:audience", "other:audience"),
+                keys -> new JwtValidatorWithCert(Set.of(), Set.of("some:audience"), keys), true);
+    }
+
     private static void assertTokenValidation(String tokenAudience,
-                                       Function<Map<String, PublicKey>, JwtValidator> validatorFactory,
-                                       boolean shouldBeValid) throws Exception
+                                              Function<Map<String, PublicKey>, JwtValidator> validatorFactory,
+                                              boolean shouldBeValid) throws Exception
     {
         // the token is issued with an array of audiences if there's more than one audience,
         // or with a string audience if there's only one.
@@ -103,8 +123,8 @@ public class JwtAudienceClaimTest
     }
 
     private static void assertTokenValidation(List<String> tokenAudiences,
-                                       Function<Map<String, PublicKey>, JwtValidator> validatorFactory,
-                                       boolean shouldBeValid) throws Exception
+                                              Function<Map<String, PublicKey>, JwtValidator> validatorFactory,
+                                              boolean shouldBeValid) throws Exception
     {
         JwtTokenFixtureHelper.TokenFixture fixture = JwtTokenFixtureHelper.createTokenFixture(ISSUER, tokenAudiences);
         try (JwtValidator validator = validatorFactory.apply(fixture.keys))
