@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2016 Curity AB.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,10 @@ package io.curity.oauth;
 
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.UnavailableException;
+
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -67,15 +69,24 @@ final class FilterHelper
     }
 
     static <T> Optional<T> getOptionalInitParamValue(String name, Map<String, ?> initParams,
-                                                     Function<String, T> converter) throws UnavailableException
+                                                     Function<String, T> converter)
+            throws UnavailableException
     {
         Optional<String> value = getSingleValue(name, initParams);
 
         return value.flatMap(s -> Optional.ofNullable(converter.apply(s)));
     }
 
-    private static Optional<String> getSingleValue(String name, Map<String, ?> initParams) throws
-            UnavailableException
+    static List<String> getWhitespaceSeparatedInitParamValues(String name, Map<String, ?> initParams)
+            throws UnavailableException
+    {
+        Optional<String> value = getSingleValue(name, initParams);
+
+        return value.map(v -> List.of(v.split("\\s+"))).orElseGet(List::of);
+    }
+
+    private static Optional<String> getSingleValue(String name, Map<String, ?> initParams)
+            throws UnavailableException
     {
         return Optional.ofNullable(initParams.get(name)).map(Object::toString);
     }

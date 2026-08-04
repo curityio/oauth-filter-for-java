@@ -22,6 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,12 +32,30 @@ final class JwtValidatorWithJwk extends AbstractJwtValidator
 
     private final JwkManager _jwkManager;
 
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, Set<String> audiences, Set<String> issuers,
+                        JsonReaderFactory jsonReaderFactory)
+    {
+        super(issuers, audiences, jsonReaderFactory);
+
+        _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
+    }
+
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, Set<String> audiences, String issuer,
+                        JsonReaderFactory jsonReaderFactory)
+    {
+        this(minKidReloadTime, webKeysClient, audiences, Set.of(issuer), jsonReaderFactory);
+    }
+
     JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, String audience, String issuer,
                         JsonReaderFactory jsonReaderFactory)
     {
-        super(issuer, audience, jsonReaderFactory);
-        
-        _jwkManager = new JwkManager(minKidReloadTime, webKeysClient, jsonReaderFactory);
+        this(minKidReloadTime, webKeysClient, Set.of(audience), Set.of(issuer), jsonReaderFactory);
+    }
+
+    JwtValidatorWithJwk(long minKidReloadTime, WebKeysClient webKeysClient, String audience, Set<String> issuers,
+                        JsonReaderFactory jsonReaderFactory)
+    {
+        this(minKidReloadTime, webKeysClient, Set.of(audience), issuers, jsonReaderFactory);
     }
 
     @Override

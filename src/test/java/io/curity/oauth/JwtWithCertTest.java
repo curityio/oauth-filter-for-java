@@ -26,12 +26,7 @@ import org.junit.runners.Parameterized;
 
 import javax.json.JsonObject;
 import javax.json.JsonString;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.net.URL;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
@@ -55,9 +50,6 @@ public class JwtWithCertTest
     private final String EXTRA_CLAIM = "TEST_KEY";
     private final String EXTRA_CLAIM_VALUE = "TEST_VALUE";
 
-    private final String PATH_TO_KEY = "/Se.Curity.Test.p12";
-    private final String KEY_PWD = "Password1";
-    
     private String _testToken;
     private KeyStore _keyStore;
 
@@ -75,10 +67,10 @@ public class JwtWithCertTest
     @Before
     public void before() throws Exception
     {
-        loadKeyStore();
+        _keyStore = TestKeyStoreHelper.loadKeyStore();
 
-        PrivateKey key = getPrivateKey();
-        Certificate cert = getCertificate();
+        PrivateKey key = TestKeyStoreHelper.getPrivateKey(_keyStore, _keyAlias);
+        Certificate cert = TestKeyStoreHelper.getCertificate(_keyStore, _keyAlias);
 
         if (!_algorithm.equals("EdDSA")) {
             // Create test token on the fly
@@ -139,7 +131,7 @@ public class JwtWithCertTest
     {
         Map<String, PublicKey> keys = new HashMap<>();
 
-        Certificate cert = getCertificate();
+        Certificate cert = TestKeyStoreHelper.getCertificate(_keyStore, _keyAlias);
 
         PublicKey key = cert.getPublicKey();
 
@@ -149,34 +141,5 @@ public class JwtWithCertTest
         keys.put(b64x5tS256, key);
 
         return keys;
-    }
-
-    private void loadKeyStore()
-            throws Exception
-    {
-        URL url = getClass().getResource(PATH_TO_KEY);
-        assert url != null;
-        File certFile = new File(url.getFile());
-
-        InputStream keyIS = new FileInputStream(certFile);
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        keyStore.load(keyIS, KEY_PWD.toCharArray());
-
-        keyIS.close();
-
-        this._keyStore=keyStore;
-    }
-
-    private PrivateKey getPrivateKey()
-            throws Exception
-    {
-        return (PrivateKey)this._keyStore.getKey(_keyAlias, KEY_PWD.toCharArray());
-
-    }
-
-    private Certificate getCertificate() throws KeyStoreException {
-        //Get key by alias (found in the p12 file using:
-        //keytool -list -keystore test-root-ca.p12 -storepass foobar -storetype PKCS12
-        return this._keyStore.getCertificate(_keyAlias);
     }
 }

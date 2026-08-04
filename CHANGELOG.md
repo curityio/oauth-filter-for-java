@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 4.1.0 (2026-07-30)
+
+- Support `aud` claim in JWT when it's specified as an array rather than a string.
+- Allow JWT validators to configure a Set of accepted audiences and issuers, not just one.
+- OAuthJwtFilter configuration now accepts whitespace-separated values for `audience` and `issuer`. 
+- Minimum Java version requirement changed to 15.
+
 ## 4.0.0 (2023-11-27)
 
 - Added support for EdDSA signatures.
